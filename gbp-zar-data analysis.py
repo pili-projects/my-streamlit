@@ -127,7 +127,7 @@ if analysis_section == "📊 Dataset Overview":
     
     with col1:
         st.metric("Total Days", f"{len(df):,}")
-        st.metric("Date Range", f"{df['posting_date'].min().date()} to {df['posting_date'].max().date()}")
+        st.metric("Date Range", f"{df['posting_date'].min().date()} to\n {df['posting_date'].max().date()}")
     
     with col2:
         total_volume = df['volume_gbp'].sum()
@@ -1097,3 +1097,4 @@ else:
     with practical business recommendations for optimizing GBP to ZAR transfer operations.
 
     """)
+
