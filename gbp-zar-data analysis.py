@@ -107,7 +107,7 @@ if analysis_section == "📊 Dataset Overview":
     st.subheader("Basic Statistics")
     stats_df = df['volume_gbp'].describe()
     stats_df.index = ['Count', 'Mean', 'Std Dev', 'Min', '25%', '50% (Median)', '75%', 'Max']
-    st.dataframe(stats_df, use_container_width=True)
+    st.dataframe(stats_df, use_container_width=False)  # Change to False
     
     # Time series plot
     st.subheader("Daily Volume Time Series")
@@ -871,6 +871,7 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
 
 
 
