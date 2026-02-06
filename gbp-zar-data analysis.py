@@ -17,7 +17,7 @@ st.set_page_config(
 warnings.filterwarnings('ignore')
 
 # Title
-st.title("💰 GBP to ZAR Transfer Volume Analysis (Q2-Q4 2023)")
+st.title("💰 GBP to ZAR Volume Analysis (Q2-Q4 2023)")
 st.markdown("Analyzing daily transfer volumes with focus on **bimodality** assessment")
 
 # Sidebar for navigation
@@ -871,6 +871,7 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
 
 
 
