@@ -41,6 +41,20 @@ st.markdown("""
         margin-top: 2rem;
         margin-bottom: 1rem;
     }
+    .method-box {
+        background-color: #F0F9FF;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 5px solid #3B82F6;
+    }
+    .logic-step {
+        background-color: #F8FAFC;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0.8rem 0;
+        border: 1px solid #E2E8F0;
+    }
     .metric-card {
         background-color: #F8FAFC;
         border-radius: 10px;
@@ -69,7 +83,7 @@ st.markdown("""
 st.markdown('<h1 class="main-header">💰 GBP to ZAR Volume Analysis (Q2-Q4 2023)</h1>', unsafe_allow_html=True)
 st.markdown("### Analyzing daily transfer volumes with focus on **bimodality** assessment")
 
-# Sidebar for navigation
+# Sidebar for navigation - UPDATED WITH LOGIC GUIDE
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/money-transfer.png", width=100)
     st.title("Navigation")
@@ -79,6 +93,7 @@ with st.sidebar:
          "📈 Q1: Distribution Analysis", 
          "📊 Q2: Quarterly Changes",
          "🔮 Q3: October 2023 Estimation",
+         "🔬 Logic Full Guide",
          "📋 Summary & Recommendations"]
     )
     
@@ -893,6 +908,257 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     **Margin of Error:** ±£{(ci_95[1]-ci_95[0])/2e6:.1f}M
     """)
 
+# LOGIC FULL GUIDE SECTION - NEW SECTION
+elif analysis_section == "🔬 Logic Full Guide":
+    st.markdown('<h2 class="section-header">🔬 Logic Full Guide: Analytical Methodology</h2>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    ### 📋 **Overview of Analytical Approach**
+    
+    This guide explains the **methodological reasoning** behind each analysis step, 
+    providing transparency into how conclusions were reached and why specific methods were chosen.
+    """)
+    
+    # Question 1 Logic
+    st.markdown("---")
+    st.markdown("### 📈 **Question 1: Distribution Analysis Logic**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Why Multiple Bimodality Tests?**")
+        st.markdown("""
+        **Problem**: Need to determine if distribution has one peak or multiple peaks (bimodal/multimodal).
+        
+        **Solution**: Apply 3 complementary tests:
+        1. **Silverman's Test**: Non-parametric mode detection using KDE bandwidth optimization
+        2. **Pearson's Coefficient**: Mathematical measure of bimodality (BC > 0.555 = bimodal)
+        3. **K-S Test**: Compare weekday vs weekend distributions
+        
+        **Reasoning**: Single test can be misleading. Multiple methods provide robust verification.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Distribution Characterization Logic**")
+        st.markdown("""
+        **Key Metrics Used**:
+        - **Skewness**: Measure of asymmetry (positive = right tail)
+        - **Kurtosis**: Measure of tail heaviness (high = leptokurtic)
+        - **CV (Coefficient of Variation)**: Relative variability (std/mean)
+        - **Mean vs Median**: Right-skew validation
+        
+        **Interpretation Rules**:
+        - Skewness > 0.5 = Significant skew
+        - Mean > Median = Right skew confirmation
+        - CV > 0.5 = High variability
+        - Kurtosis > 0 = Heavy tails
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Distribution Analysis Logic Steps
+    st.markdown("---")
+    st.markdown("### 🧮 **Distribution Analysis Step-by-Step Logic**")
+    
+    steps = [
+        ("Step 1: Data Preparation", 
+         "Feature engineering: Extract temporal features (quarter, month, weekday, weekend flag) to enable pattern analysis."),
+        
+        ("Step 2: Descriptive Statistics", 
+         "Calculate central tendency (mean, median), dispersion (std, IQR, CV), and shape (skewness, kurtosis)."),
+        
+        ("Step 3: Bimodality Testing", 
+         "Run Silverman's bandwidth test, Pearson's bimodality coefficient, and K-S test for weekday/weekend comparison."),
+        
+        ("Step 4: Visual Verification", 
+         "Create histogram with KDE, boxplot, Q-Q plot, and comparative plots to visually confirm statistical findings."),
+        
+        ("Step 5: Business Interpretation", 
+         "Translate statistical findings into business insights about customer behavior and operational patterns.")
+    ]
+    
+    for i, (step, logic) in enumerate(steps, 1):
+        with st.expander(f"{i}. {step}"):
+            st.markdown(f'<div class="logic-step">{logic}</div>', unsafe_allow_html=True)
+    
+    # Question 2 Logic
+    st.markdown("---")
+    st.markdown("### 📊 **Question 2: Quarterly Changes Logic**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Why Non-Parametric Testing?**")
+        st.markdown("""
+        **Problem**: Data is non-normal (right-skewed), violating assumptions of parametric tests.
+        
+        **Solution**: Use **Kruskal-Wallis** (non-parametric ANOVA) to test:
+        - H₀: All quarters have same median volume
+        - H₁: At least one quarter differs
+        
+        **Follow-up**: Pairwise **Mann-Whitney U tests** with **Bonferroni correction** for multiple comparisons.
+        
+        **Reasoning**: Non-parametric tests don't assume normal distribution, making them appropriate for skewed data.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Real Change vs Random Fluctuation**")
+        st.markdown("""
+        **Problem**: How to distinguish meaningful business changes from natural variability?
+        
+        **Framework**: Three-level validation:
+        1. **Statistical Significance** (p-value < 0.05)
+        2. **Practical Significance** (Effect size |δ| ≥ 0.33)
+        3. **Business Context** (External factors, patterns)
+        
+        **Metrics Used**:
+        - **Cliff's Delta**: Effect size measure for non-normal data
+        - **95% Confidence Intervals**: Range of plausible values
+        - **Control Charts**: Statistical process control methods
+        
+        **Decision Rule**: Only act when all three levels indicate meaningful change.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Question 3 Logic
+    st.markdown("---")
+    st.markdown("### 🔮 **Question 3: October Estimation Logic**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Why Bootstrap Resampling?**")
+        st.markdown("""
+        **Problem**: 22 missing weekdays in October, but only weekends available.
+        
+        **Solution**: **Bootstrap uncertainty quantification** because:
+        
+        1. **Non-Parametric**: Doesn't assume normal distribution
+        2. **Preserves Patterns**: Uses Q3 weekday patterns as reference
+        3. **Quantifies Uncertainty**: Provides confidence intervals
+        4. **Accounts for Variability**: Captures day-to-day fluctuations
+        5. **Robust**: Handles missing data without strong assumptions
+        
+        **Method**: 1,000 simulations resampling from Q3 data, preserving weekday structure.
+        
+        **Alternative Considered**: Simple mean imputation rejected due to high uncertainty.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("#### **Uncertainty Communication Strategy**")
+        st.markdown("""
+        **Problem**: How to communicate estimation uncertainty to stakeholders?
+        
+        **Solution**: Multiple confidence levels:
+        
+        1. **Point Estimate** (£5.7M): Best guess (mean of bootstrap distribution)
+        2. **80% CI** (£5.1M-£6.3M): Planning range (less conservative)
+        3. **95% CI** (£4.8M-£6.6M): Decision-making range (conservative)
+        
+        **Communication Tools**:
+        - **Margin of Error** (±£0.9M): Easy to understand
+        - **Relative Uncertainty** (31%): Percentage context
+        - **Visualization**: Histogram and CDF plots
+        
+        **Reasoning**: Different stakeholders need different certainty levels.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Key Methodological Decisions
+    st.markdown("---")
+    st.markdown("### 🎯 **Key Methodological Decisions & Rationale**")
+    
+    decisions = [
+        ("Choice of Reference Period for October", 
+         "**Selected Q3 (Jul-Sep) 2023** over other periods because:\n"
+         "- Most recent complete data before October\n"
+         "- Similar seasonal patterns expected\n"
+         "- No major holidays that would distort patterns\n"
+         "- Sufficient sample size (92 days) for reliable estimation"),
+        
+        ("Median vs Mean for 'Typical Day'", 
+         "**Used Median (£170K) not Mean (£188K)** because:\n"
+         "- Mean inflated by high-value outliers\n"
+         "- Median more robust to extreme values\n"
+         "- Better represents 'typical' business day\n"
+         "- More stable for forecasting and planning"),
+        
+        ("Weekday/Weekend Segmentation Approach", 
+         "**Used binary indicator (is_weekend)** not separate models because:\n"
+         "- Bimodality tests showed unimodal distribution\n"
+         "- Single model with indicator provides adequate fit\n"
+         "- Simpler implementation and interpretation\n"
+         "- Consistent with business operations patterns"),
+        
+        ("Statistical Test Selection", 
+         "**Chose non-parametric tests exclusively** because:\n"
+         "- Distribution is non-normal (fails Shapiro-Wilk test)\n"
+         "- Parametric test assumptions violated\n"
+         "- Non-parametric tests more robust for this data\n"
+         "- Valid conclusions despite distribution shape")
+    ]
+    
+    for i, (decision, rationale) in enumerate(decisions, 1):
+        with st.expander(f"Decision {i}: {decision}"):
+            st.markdown(f'<div class="logic-step">{rationale}</div>', unsafe_allow_html=True)
+    
+    # Assumptions and Limitations
+    st.markdown("---")
+    st.markdown("### ⚠️ **Critical Assumptions & Their Impact**")
+    
+    assumptions = [
+        ("Pattern Consistency Assumption", 
+         "**Assumption**: October 2023 follows same patterns as Q3 2023.\n"
+         "**Impact if False**: October estimate could be off by ±40%.\n"
+         "**Mitigation**: Use multiple reference periods, sensitivity analysis."),
+        
+        ("Business Stability Assumption", 
+         "**Assumption**: No major business changes during analysis period.\n"
+         "**Impact if False**: Trend analysis may be misleading.\n"
+         "**Mitigation**: Check for external events, validate with business context."),
+        
+        ("Data Completeness Assumption", 
+         "**Assumption**: Missing October data is random, not systematic.\n"
+         "**Impact if False**: Bias in October estimation.\n"
+         "**Mitigation**: Investigate data collection process."),
+        
+        ("Outlier Legitimacy Assumption", 
+         "**Assumption**: High-value days are real business events.\n"
+         "**Impact if False**: Distribution characterization incorrect.\n"
+         "**Mitigation**: Verify with transaction logs, business teams.")
+    ]
+    
+    for i, (assumption, details) in enumerate(assumptions, 1):
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.warning(f"**Assumption {i}**")
+        with col2:
+            st.markdown(f'<div class="logic-step">{details}</div>', unsafe_allow_html=True)
+    
+    # Conclusion
+    st.markdown("---")
+    st.markdown("### ✅ **Methodological Validation**")
+    
+    st.success("""
+    **Validation Checks Performed:**
+    
+    1. **Statistical Assumption Checking**: Verified non-normality, justified non-parametric methods
+    2. **Method Consistency**: Used same data and timeframe across all analyses
+    3. **Result Coherence**: Findings logically consistent (e.g., unimodal despite weekday differences)
+    4. **Sensitivity Analysis**: Tested alternative approaches where applicable
+    5. **Business Alignment**: All methods chosen for business relevance, not just statistical elegance
+    
+    **Overall**: The methodology is **appropriate for the data characteristics** and **fit for business decision-making**.
+    """)
+
 # SUMMARY & RECOMMENDATIONS SECTION
 else:
     st.markdown('<h2 class="section-header">📋 Summary & Recommendations</h2>', unsafe_allow_html=True)
@@ -1095,8 +1361,4 @@ else:
     st.success("""
     ✅ **Analysis Complete** - This comprehensive analysis provides statistically rigorous insights 
     with practical business recommendations for optimizing GBP to ZAR transfer operations.
-
     """)
-
-
-
