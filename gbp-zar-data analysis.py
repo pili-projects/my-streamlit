@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore')
 plt.style.use('seaborn-v0_8-whitegrid')
 sns.set_palette("husl")
 
-# Custom CSS
+# Custom CSS - UPDATED WITH BETTER STYLING
 st.markdown("""
 <style>
     .main-header {
@@ -32,49 +32,177 @@ st.markdown("""
         color: #1E3A8A;
         text-align: center;
         margin-bottom: 2rem;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     .section-header {
         font-size: 1.8rem;
         color: #1E40AF;
-        border-bottom: 2px solid #3B82F6;
+        border-bottom: 3px solid #3B82F6;
         padding-bottom: 0.5rem;
         margin-top: 2rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        padding-left: 0.5rem;
     }
     .method-box {
-        background-color: #F0F9FF;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.8rem;
+        margin: 1.2rem 0;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    .method-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    .method-box h4 {
+        color: white;
+        margin-top: 0;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+    .logic-step {
+        background: rgba(59, 130, 246, 0.08);
+        border-radius: 12px;
         padding: 1.5rem;
         margin: 1rem 0;
         border-left: 5px solid #3B82F6;
+        border-right: 1px solid rgba(59, 130, 246, 0.2);
+        border-top: 1px solid rgba(59, 130, 246, 0.1);
+        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
     }
-    .logic-step {
-        background-color: #F8FAFC;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 0.8rem 0;
-        border: 1px solid #E2E8F0;
-    }
-    .metric-card {
-        background-color: #F8FAFC;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-left: 4px solid #3B82F6;
-    }
-    .insight-box {
-        background-color: #EFF6FF;
-        border-radius: 10px;
+    .decision-box {
+        background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+        border-radius: 12px;
         padding: 1.5rem;
         margin: 1rem 0;
-        border: 1px solid #93C5FD;
+        border: 2px solid #7DD3FC;
+        box-shadow: 0 4px 12px rgba(125, 211, 252, 0.2);
+    }
+    .assumption-box {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 2px solid #F59E0B;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #4F46E5 0%, #7E22CE 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 0.5rem;
+        border: none;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        text-align: center;
+    }
+    .metric-card .st-emotion-cache-1xarl3l {
+        color: white !important;
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+    }
+    .metric-card .st-emotion-cache-16idsys {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 0.9rem !important;
+    }
+    .insight-box {
+        background: linear-gradient(135deg, #4F46E5 0%, #7E22CE 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.8rem;
+        margin: 1.5rem 0;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
     .warning-box {
-        background-color: #FEF3C7;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.8rem;
+        margin: 1.5rem 0;
+        border: none;
+        box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+    }
+    
+    /* Improve Streamlit default components */
+    .streamlit-expanderHeader {
+        background-color: #F8FAFC;
         border-radius: 10px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border: 1px solid #F59E0B;
+        margin: 0.5rem 0;
+        border: 1px solid #E5E7EB;
+        font-weight: 600;
+    }
+    .streamlit-expanderHeader:hover {
+        background-color: #F1F5F9;
+        border-color: #3B82F6;
+    }
+    
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Improve tables */
+    .dataframe {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* Better text contrast */
+    .stMarkdown {
+        color: #1F2937;
+        line-height: 1.6;
+    }
+    
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
+        color: #1E40AF;
+    }
+    
+    /* Sidebar improvements */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+    }
+    
+    /* Fix for code blocks */
+    .stCodeBlock {
+        border-radius: 10px;
+        border: 1px solid #E5E7EB;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #F1F5F9;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b21a8 100%);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -83,10 +211,17 @@ st.markdown("""
 st.markdown('<h1 class="main-header">💰 GBP to ZAR Volume Analysis (Q2-Q4 2023)</h1>', unsafe_allow_html=True)
 st.markdown("### Analyzing daily transfer volumes with focus on **bimodality** assessment")
 
-# Sidebar for navigation - UPDATED WITH LOGIC GUIDE
+# Sidebar for navigation
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/money-transfer.png", width=100)
-    st.title("Navigation")
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💰</div>
+        <h2 style="color: #1E40AF; margin-bottom: 0.5rem;">GBP→ZAR Analysis</h2>
+        <p style="color: #6B7280; font-size: 0.9rem;">Q2-Q4 2023 Transfer Volumes</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### Navigation")
     analysis_section = st.radio(
         "Choose Analysis Section:",
         ["📊 Dataset Overview", 
@@ -94,15 +229,17 @@ with st.sidebar:
          "📊 Q2: Quarterly Changes",
          "🔮 Q3: October 2023 Estimation",
          "🔬 Logic Full Guide",
-         "📋 Summary & Recommendations"]
+         "📋 Summary & Recommendations"],
+        label_visibility="collapsed"
     )
     
     st.markdown("---")
-    st.markdown("### About this Analysis")
+    
+    st.markdown("### 📌 About this Analysis")
     st.markdown("""
     **Focus Areas:**
     - Distribution shape & bimodality
-    - Quarterly trend analysis
+    - Quarterly trend analysis  
     - Missing data imputation
     - Business implications
     
@@ -111,6 +248,17 @@ with st.sidebar:
     - Bootstrap uncertainty quantification
     - KDE analysis
     - Non-parametric comparisons
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("### 🛠️ Technical Details")
+    st.markdown("""
+    **Data Source:** Daily transfer volumes  
+    **Period:** Apr-Dec 2023  
+    **Records:** 253 days  
+    **Tools:** Python, Streamlit, SciPy  
+    **Analysis Time:** ~3-4 hours
     """)
 
 # Load data
@@ -141,36 +289,42 @@ if analysis_section == "📊 Dataset Overview":
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Total Days", f"{len(df):,}")
         st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         total_volume = df['volume_gbp'].sum()
         st.metric("Total Volume", f"£{total_volume:,.0f}")
         st.metric("Average Daily", f"£{df['volume_gbp'].mean():,.0f}")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         zero_days = (df['volume_gbp'] == 0).sum()
         st.metric("Zero Volume Days", zero_days)
         st.metric("Missing Values", df.isnull().sum().sum())
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Data preview
     st.subheader("Data Preview")
     col1, col2 = st.columns(2)
     
     with col1:
-        st.write("First 10 records:")
+        st.write("**First 10 records:**")
         st.dataframe(df.head(10), use_container_width=True)
     
     with col2:
-        st.write("Last 10 records:")
+        st.write("**Last 10 records:**")
         st.dataframe(df.tail(10), use_container_width=True)
     
     # Basic statistics
     st.subheader("Basic Statistics")
     stats_df = df['volume_gbp'].describe()
     stats_df.index = ['Count', 'Mean', 'Std Dev', 'Min', '25%', '50% (Median)', '75%', 'Max']
-    st.dataframe(stats_df, use_container_width=True)
+    st.dataframe(stats_df.style.background_gradient(cmap='Blues'), use_container_width=True)
     
     # Time series plot
     st.subheader("Daily Volume Time Series")
@@ -202,13 +356,21 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("Mean", f"£{mean_vol:,.0f}")
+            st.markdown('</div>', unsafe_allow_html=True)
         with col2:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("Median", f"£{median_vol:,.0f}")
+            st.markdown('</div>', unsafe_allow_html=True)
         with col3:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("Skewness", f"{skew:.2f}")
+            st.markdown('</div>', unsafe_allow_html=True)
         with col4:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("CV", f"{cv:.2f}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("---")
         st.subheader("🔍 **Bimodality Analysis**")
@@ -259,20 +421,26 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         col1, col2 = st.columns(2)
         
         with col1:
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
             st.markdown("##### Silverman's Test Results:")
-            st.write(f"- Optimal bandwidth: {h_silverman:.2f}")
-            st.write(f"- Modes at optimal BW: **{modes_count[1]} mode**")
-            st.write("- Conclusion: **Unimodal** (single peak)")
+            st.write(f"- **Optimal bandwidth**: {h_silverman:.2f}")
+            st.write(f"- **Modes at optimal BW**: {modes_count[1]} mode")
+            st.write("- **Conclusion**: **Unimodal** (single peak)")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
             st.markdown("##### Pearson's Bimodality Coefficient:")
-            st.write(f"- Coefficient: **{bc:.4f}**")
-            st.write(f"- Critical threshold: > 0.555")
-            st.write(f"- Conclusion: **{'BIMODAL' if is_bimodal_bc else 'UNIMODAL'}**")
+            st.write(f"- **Coefficient**: {bc:.4f}")
+            st.write(f"- **Critical threshold**: > 0.555")
+            st.write(f"- **Conclusion**: **{'BIMODAL' if is_bimodal_bc else 'UNIMODAL'}**")
+            st.markdown('</div>', unsafe_allow_html=True)
         
+        st.markdown('<div class="warning-box">', unsafe_allow_html=True)
         st.markdown("##### Weekday vs Weekend Comparison:")
-        st.write(f"- KS test p-value: **{ks_p:.4f}**")
-        st.write(f"- Conclusion: **{'Significantly different' if ks_p < 0.05 else 'Not significantly different'}**")
+        st.write(f"- **KS test p-value**: {ks_p:.4f}")
+        st.write(f"- **Conclusion**: **{'Significantly different' if ks_p < 0.05 else 'Not significantly different'}**")
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Visualizations
         st.subheader("Distribution Visualizations")
@@ -354,19 +522,24 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         col1, col2 = st.columns(2)
         
         with col1:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("Weekday Mean", f"£{weekday_mean:,.0f}")
             st.metric("Weekend Mean", f"£{weekend_mean:,.0f}")
             st.metric("Weekday:Weekend Ratio", f"{ratio:.1f}x")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric("Outlier Threshold", f"£{upper_bound:,.0f}")
             st.metric("Outlier Days", f"{len(outliers)} ({len(outliers)/len(df)*100:.1f}%)")
             st.metric("Zero-Volume Days", f"{(df['volume_gbp'] == 0).sum()}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown("### 🔑 **Real-World Causes & Business Drivers**")
         
         st.markdown("""
+        <div class="logic-step">
         #### **Primary Drivers of Distribution Shape:**
         
         1. **Banking Hours & Operations:**
@@ -393,26 +566,35 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
            - Transaction limits per day
            - Batch processing schedules
            - Compliance checks timing
+        </div>
+        """, unsafe_allow_html=True)
         
-        #### **Weekend Pattern Explanation:**
+        st.markdown('<div class="decision-box">', unsafe_allow_html=True)
+        st.markdown("#### **Weekend Pattern Explanation:**")
+        st.markdown("""
         - **Saturdays**: Minimal activity (mostly automated/recurring transfers)
         - **Sundays**: Slightly higher than Saturdays (pre-Monday planning)
         - **Zero-volume Saturdays**: Complete banking closure effects
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        #### **High-Value Outliers (Business Events):**
+        st.markdown('<div class="assumption-box">', unsafe_allow_html=True)
+        st.markdown("#### **High-Value Outliers (Business Events):**")
+        st.markdown("""
         These represent legitimate business activities:
         - Corporate acquisitions
         - Large investment transfers
         - Supplier bulk payments
         - Treasury rebalancing
         """)
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Show top outliers
         if len(outliers) > 0:
             st.subheader("Top 5 High-Value Outlier Days")
             outlier_display = outliers.nlargest(5, 'volume_gbp')[['posting_date', 'volume_gbp', 'weekday']]
             outlier_display['volume_gbp'] = outlier_display['volume_gbp'].apply(lambda x: f"£{x:,.0f}")
-            st.dataframe(outlier_display, use_container_width=True)
+            st.dataframe(outlier_display.style.background_gradient(cmap='Reds'), use_container_width=True)
     
     with tab3:
         st.markdown("### 1c) What are some of the implications that this distribution would commonly have on analysis that you might do?")
@@ -423,8 +605,9 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         col1, col2 = st.columns(2)
         
         with col1:
+            st.markdown('<div class="method-box">', unsafe_allow_html=True)
+            st.markdown("#### **1. Statistical Testing Limitations**")
             st.markdown("""
-            #### **1. Statistical Testing Limitations**
             - **Parametric tests invalid**: t-tests, ANOVA assumptions violated
             - **Use non-parametric alternatives**:
               * Mann-Whitney U (2-group comparisons)
@@ -432,71 +615,98 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
               * Wilcoxon signed-rank (paired data)
             - **Correlation analysis**: Use Spearman's ρ instead of Pearson's r
             """)
+            st.markdown('</div>', unsafe_allow_html=True)
             
+            st.markdown('<div class="method-box">', unsafe_allow_html=True)
+            st.markdown("#### **2. Central Tendency Measures**")
             st.markdown("""
-            #### **2. Central Tendency Measures**
             - **Mean inflated** by outliers (£188K vs £170K median)
             - **Median better** for "typical day" reporting
             - Consider **trimmed or Winsorized means** for robustness
             - **Mode less meaningful** due to continuous nature
             """)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="method-box">', unsafe_allow_html=True)
+            st.markdown("#### **3. Forecasting & Modeling Challenges**")
             st.markdown("""
-            #### **3. Forecasting & Modeling Challenges**
             - **Traditional time series models (ARIMA)** may fail
             - **Transformations needed**: log, Box-Cox, or Yeo-Johnson
             - **Segment modeling required**: Separate weekday/weekend models
             - **Machine learning approaches**: More robust to non-normality
             - **Error metrics**: Use MAE/MAPE, RMSE sensitive to outliers
             """)
+            st.markdown('</div>', unsafe_allow_html=True)
             
+            st.markdown('<div class="method-box">', unsafe_allow_html=True)
+            st.markdown("#### **4. Outlier Management Strategy**")
             st.markdown("""
-            #### **4. Outlier Management Strategy**
             - **Don't automatically remove**: Outliers are real business events
             - **Separate analysis**: Investigate causes and patterns
             - **Robust statistics**: Use median-based methods
             - **Anomaly detection**: Implement for operational monitoring
             """)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown("### 🏢 **Business & Operational Implications**")
         
-        st.markdown("""
-        #### **5. Business Planning & Operations**
-        - **Capacity planning**: Need buffers for high-variability days
-        - **Liquidity management**: Higher reserves for potential spikes
-        - **Staff scheduling**: Match weekday/weekend staffing to volume patterns
-        - **Risk assessment**: Fat tails indicate higher operational risk
+        col1, col2 = st.columns(2)
         
-        #### **6. Customer Insights & Segmentation**
-        - **Segmentation by behavior**: Not by volume alone (unimodal distribution)
-        - **Weekday indicator critical**: Must include in all models
-        - **Customer journey analysis**: Different patterns for business vs retail
+        with col1:
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+            st.markdown("#### **5. Business Planning & Operations**")
+            st.markdown("""
+            - **Capacity planning**: Need buffers for high-variability days
+            - **Liquidity management**: Higher reserves for potential spikes
+            - **Staff scheduling**: Match weekday/weekend staffing to volume patterns
+            - **Risk assessment**: Fat tails indicate higher operational risk
+            """)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+            st.markdown("#### **6. Customer Insights & Segmentation**")
+            st.markdown("""
+            - **Segmentation by behavior**: Not by volume alone (unimodal distribution)
+            - **Weekday indicator critical**: Must include in all models
+            - **Customer journey analysis**: Different patterns for business vs retail
+            """)
+            st.markdown('</div>', unsafe_allow_html=True)
         
-        #### **7. Performance Reporting**
-        - **Use medians for benchmarks**: More representative of typical performance
-        - **Separate weekday/weekend reporting**: Different business dynamics
-        - **Monitor distribution changes**: Shifts indicate business changes
-        - **Set realistic targets**: Account for natural variability
-        
-        #### **8. Data Quality & Collection**
-        - **Ensure weekday coverage**: Missing weekdays have huge impact
-        - **Monitor zero-volume days**: Could indicate data issues or closures
-        - **Document special events**: Annotate outliers with business context
-        """)
+        with col2:
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+            st.markdown("#### **7. Performance Reporting**")
+            st.markdown("""
+            - **Use medians for benchmarks**: More representative of typical performance
+            - **Separate weekday/weekend reporting**: Different business dynamics
+            - **Monitor distribution changes**: Shifts indicate business changes
+            - **Set realistic targets**: Account for natural variability
+            """)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+            st.markdown("#### **8. Data Quality & Collection**")
+            st.markdown("""
+            - **Ensure weekday coverage**: Missing weekdays have huge impact
+            - **Monitor zero-volume days**: Could indicate data issues or closures
+            - **Document special events**: Annotate outliers with business context
+            """)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown("### 📊 **Specific Recommendations for WISE**")
         
         st.markdown("""
-        1. **Reporting**: Use median volume (£170K) as "typical day" metric
-        2. **Analysis**: Apply non-parametric statistical tests exclusively
-        3. **Forecasting**: Build separate models for weekdays and weekends
-        4. **Planning**: Maintain 30-40% buffer capacity for high-volume days
-        5. **Monitoring**: Track distribution shape weekly for early warning signs
+        <div class="logic-step">
+        1. **Reporting**: Use median volume (£170K) as "typical day" metric  
+        2. **Analysis**: Apply non-parametric statistical tests exclusively  
+        3. **Forecasting**: Build separate models for weekdays and weekends  
+        4. **Planning**: Maintain 30-40% buffer capacity for high-volume days  
+        5. **Monitoring**: Track distribution shape weekly for early warning signs  
         6. **Segmentation**: Focus on transaction behavior rather than volume tiers
-        """)
+        </div>
+        """, unsafe_allow_html=True)
 
 # Q2: QUARTERLY ANALYSIS SECTION
 elif analysis_section == "📊 Q2: Quarterly Changes":
@@ -522,21 +732,27 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         q2_median = quarterly_stats.loc[2, 'median']
         st.metric("Q2 Median", f"£{q2_median:,.0f}")
         st.metric("Q2 Days", quarterly_stats.loc[2, 'count'])
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         q3_median = quarterly_stats.loc[3, 'median']
         q2_q3_change = ((q3_median - q2_median) / q2_median * 100)
         st.metric("Q3 Median", f"£{q3_median:,.0f}")
         st.metric("Q2→Q3 Change", f"{q2_q3_change:+.1f}%")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         q4_median = quarterly_stats.loc[4, 'median']
         q3_q4_change = ((q4_median - q3_median) / q3_median * 100)
         st.metric("Q4 Median", f"£{q4_median:,.0f}")
         st.metric("Q3→Q4 Change", f"{q3_q4_change:+.1f}%")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Statistical testing
     st.markdown("---")
@@ -553,16 +769,18 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     col1, col2 = st.columns(2)
     
     with col1:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
         st.markdown("##### **Kruskal-Wallis Test**")
-        st.write(f"- H₀: All quarters have same median")
-        st.write(f"- H₁: At least one quarter differs")
-        st.write(f"- Test statistic (H): {h_stat:.4f}")
-        st.write(f"- **p-value: {p_val_kw:.4f}**")
+        st.write(f"- **H₀**: All quarters have same median")
+        st.write(f"- **H₁**: At least one quarter differs")
+        st.write(f"- **Test statistic (H)**: {h_stat:.4f}")
+        st.write(f"- **p-value**: {p_val_kw:.4f}")
         
         if p_val_kw < 0.05:
-            st.success("✅ REJECT H₀: Significant difference exists (p < 0.05)")
+            st.success("✅ **REJECT H₀**: Significant difference exists (p < 0.05)")
         else:
-            st.warning("❌ FAIL TO REJECT H₀: No significant difference (p ≥ 0.05)")
+            st.warning("❌ **FAIL TO REJECT H₀**: No significant difference (p ≥ 0.05)")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Effect size analysis
     def cliffs_delta(x, y):
@@ -576,22 +794,24 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
         return delta
     
     with col2:
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
         st.markdown("##### **Effect Size Analysis (Cliff's Delta)**")
         
         delta_q2_q3 = cliffs_delta(Q2_data, Q3_data)
         delta_q2_q4 = cliffs_delta(Q2_data, Q4_data)
         delta_q3_q4 = cliffs_delta(Q3_data, Q4_data)
         
-        st.write(f"- Q2 → Q3: δ = {delta_q2_q3:+.3f}")
-        st.write(f"- Q2 → Q4: δ = {delta_q2_q4:+.3f}")
-        st.write(f"- Q3 → Q4: δ = {delta_q3_q4:+.3f}")
+        st.write(f"- **Q2 → Q3**: δ = {delta_q2_q3:+.3f}")
+        st.write(f"- **Q2 → Q4**: δ = {delta_q2_q4:+.3f}")
+        st.write(f"- **Q3 → Q4**: δ = {delta_q3_q4:+.3f}")
         
         # Interpretation
         st.markdown("**Interpretation:**")
-        st.write("|δ| < 0.147: Negligible effect")
-        st.write("0.147 ≤ |δ| < 0.33: Small effect")
-        st.write("0.33 ≤ |δ| < 0.474: Medium effect")
-        st.write("|δ| ≥ 0.474: Large effect")
+        st.write("|δ| < 0.147: **Negligible effect**")
+        st.write("0.147 ≤ |δ| < 0.33: **Small effect**")
+        st.write("0.33 ≤ |δ| < 0.474: **Medium effect**")
+        st.write("|δ| ≥ 0.474: **Large effect**")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Visualizations
     st.markdown("---")
@@ -638,6 +858,7 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     st.markdown("### 🎯 **How to Determine 'Real' Changes vs Background Fluctuations**")
     
     st.markdown("""
+    <div class="logic-step">
     #### **Methodological Framework:**
     
     1. **Statistical Significance Testing:**
@@ -669,12 +890,14 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
        - Correlate with **known business events**
        - Check **external factors** (exchange rates, holidays)
        - Validate with **operational data** (customer counts, avg transaction size)
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("### 📋 **Application to Our Data**")
     
     st.markdown(f"""
+    <div class="decision-box">
     #### **Conclusion for WISE Data:**
     
     **1. Statistical Significance:**
@@ -695,7 +918,8 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     - Focus on **longer-term trends** (6+ months)
     - Investigate only if **effect size becomes meaningful** (|δ| ≥ 0.33)
     - Implement **control charts** for ongoing monitoring
-    """)
+    </div>
+    """, unsafe_allow_html=True)
 
 # Q3: OCTOBER 2023 ESTIMATION SECTION
 elif analysis_section == "🔮 Q3: October 2023 Estimation":
@@ -710,32 +934,41 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Days with Data", f"{len(oct_2023)}/31")
         st.metric("Missing Days", 31 - len(oct_2023))
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         available_days = oct_2023['posting_date'].dt.day.tolist()
         st.metric("Weekend Days", f"{len(oct_2023)}")
         st.metric("Weekday Days", "0")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         oct_total_actual = oct_2023['volume_gbp'].sum()
         st.metric("Available Data Total", f"£{oct_total_actual:,.0f}")
         st.metric("Days are Weekends", "100%")
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    st.warning("⚠️ **Critical Observation**: All available October data are WEEKENDS (Saturdays & Sundays). All WEEKDAYS in October are MISSING.")
+    st.markdown('<div class="warning-box">', unsafe_allow_html=True)
+    st.markdown("⚠️ **Critical Observation**: All available October data are WEEKENDS (Saturdays & Sundays). All WEEKDAYS in October are MISSING.")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Show available data
     st.subheader("Available October Data")
     oct_display = oct_2023[['posting_date', 'volume_gbp', 'weekday']].copy()
     oct_display['volume_gbp'] = oct_display['volume_gbp'].apply(lambda x: f"£{x:,.2f}")
-    st.dataframe(oct_display, use_container_width=True)
+    st.dataframe(oct_display.style.background_gradient(cmap='Greens'), use_container_width=True)
     
     # Estimation Methodology
     st.markdown("---")
     st.markdown("### 📊 **Estimation Methodology**")
     
     st.markdown("""
+    <div class="method-box">
     #### **Why Bootstrap Resampling?**
     
     I chose **bootstrap uncertainty quantification** because:
@@ -752,7 +985,8 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     3. For each missing October weekday, **resample** from corresponding Q3 weekday data
     4. Run **1,000 simulations** to estimate total October volume
     5. Calculate **confidence intervals** from bootstrap distribution
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Run bootstrap estimation
     st.markdown("---")
@@ -810,18 +1044,26 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Best Estimate (Mean)", f"£{mean_estimate/1e6:.1f}M")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Median Estimate", f"£{median_estimate/1e6:.1f}M")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         ci_range = ci_95[1] - ci_95[0]
         st.metric("95% CI Range", f"£{ci_range/1e6:.1f}M")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col4:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         relative_uncertainty = (ci_range / mean_estimate * 100)
         st.metric("Relative Uncertainty", f"{relative_uncertainty:.0f}%")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Confidence intervals
     st.markdown("##### **Confidence Intervals (Measures of Range & Certainty)**")
@@ -829,12 +1071,16 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.info(f"**95% Confidence Interval:**\n£{ci_95[0]/1e6:.1f}M to £{ci_95[1]/1e6:.1f}M")
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown(f"**95% Confidence Interval:**\n£{ci_95[0]/1e6:.1f}M to £{ci_95[1]/1e6:.1f}M")
         st.write("We are 95% confident the true October total lies in this range")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.info(f"**80% Confidence Interval:**\n£{ci_80[0]/1e6:.1f}M to £{ci_80[1]/1e6:.1f}M")
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown(f"**80% Confidence Interval:**\n£{ci_80[0]/1e6:.1f}M to £{ci_80[1]/1e6:.1f}M")
         st.write("Tighter range for less conservative estimates")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Visualizations
     st.markdown("---")
@@ -877,47 +1123,63 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     st.markdown("### ⚠️ **Assumptions & Limitations**")
     
     st.markdown("""
+    <div class="assumption-box">
     #### **Key Assumptions:**
     1. **Pattern Consistency**: October 2023 follows same weekday/weekend patterns as Q3 2023
     2. **No Structural Breaks**: No major business changes between Q3 and October
     3. **Representative Q3**: Q3 data is representative of typical patterns
     4. **Exchange Rate Stability**: GBP/ZAR rate effects are constant
+    </div>
     
+    <div class="warning-box">
     #### **Limitations:**
     1. **High Uncertainty**: 22 missing weekdays → wide confidence intervals
     2. **Seasonal Effects**: October may have unique patterns not captured in Q3
     3. **Business Events**: Special events in October not accounted for
     4. **Market Changes**: FX rate movements could affect volumes
+    </div>
     
+    <div class="decision-box">
     #### **Recommendations for Improvement:**
     1. **Investigate Data Gap**: Why are October weekdays missing?
     2. **Use Multiple Reference Periods**: Compare with previous years' October data
     3. **Incorporate External Factors**: Include exchange rate data
     4. **Sensitivity Analysis**: Test different imputation methods
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Final estimate summary
     st.markdown("---")
     st.markdown("### 🎯 **Final October 2023 Estimate**")
     
-    st.success(f"""
-    **Best Estimate:** October 2023 total transfer volume = **£{mean_estimate/1e6:.1f} million**
+    st.markdown(f"""
+    <div class="method-box" style="text-align: center; padding: 2rem;">
+    <h3 style="margin-bottom: 1rem;">📊 Final October 2023 Estimate</h3>
     
-    **With 95% Confidence:** Between **£{ci_95[0]/1e6:.1f}M** and **£{ci_95[1]/1e6:.1f}M**
+    <h2 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">£{mean_estimate/1e6:.1f} million</h2>
     
-    **Margin of Error:** ±£{(ci_95[1]-ci_95[0])/2e6:.1f}M
-    """)
+    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+    <strong>With 95% Confidence:</strong> Between £{ci_95[0]/1e6:.1f}M and £{ci_95[1]/1e6:.1f}M
+    </p>
+    
+    <p style="font-size: 1.1rem;">
+    <strong>Margin of Error:</strong> ±£{(ci_95[1]-ci_95[0])/2e6:.1f}M
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# LOGIC FULL GUIDE SECTION - NEW SECTION
+# LOGIC FULL GUIDE SECTION
 elif analysis_section == "🔬 Logic Full Guide":
     st.markdown('<h2 class="section-header">🔬 Logic Full Guide: Analytical Methodology</h2>', unsafe_allow_html=True)
     
     st.markdown("""
+    <div class="method-box">
     ### 📋 **Overview of Analytical Approach**
     
     This guide explains the **methodological reasoning** behind each analysis step, 
     providing transparency into how conclusions were reached and why specific methods were chosen.
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Question 1 Logic
     st.markdown("---")
@@ -964,23 +1226,23 @@ elif analysis_section == "🔬 Logic Full Guide":
     
     steps = [
         ("Step 1: Data Preparation", 
-         "Feature engineering: Extract temporal features (quarter, month, weekday, weekend flag) to enable pattern analysis."),
+         "**Feature engineering**: Extract temporal features (quarter, month, weekday, weekend flag) to enable pattern analysis."),
         
         ("Step 2: Descriptive Statistics", 
-         "Calculate central tendency (mean, median), dispersion (std, IQR, CV), and shape (skewness, kurtosis)."),
+         "**Calculate central tendency** (mean, median), **dispersion** (std, IQR, CV), and **shape** (skewness, kurtosis)."),
         
         ("Step 3: Bimodality Testing", 
-         "Run Silverman's bandwidth test, Pearson's bimodality coefficient, and K-S test for weekday/weekend comparison."),
+         "**Run Silverman's bandwidth test**, **Pearson's bimodality coefficient**, and **K-S test** for weekday/weekend comparison."),
         
         ("Step 4: Visual Verification", 
-         "Create histogram with KDE, boxplot, Q-Q plot, and comparative plots to visually confirm statistical findings."),
+         "**Create histogram with KDE**, **boxplot**, **Q-Q plot**, and **comparative plots** to visually confirm statistical findings."),
         
         ("Step 5: Business Interpretation", 
-         "Translate statistical findings into business insights about customer behavior and operational patterns.")
+         "**Translate statistical findings** into business insights about customer behavior and operational patterns.")
     ]
     
     for i, (step, logic) in enumerate(steps, 1):
-        with st.expander(f"{i}. {step}"):
+        with st.expander(f"**{i}. {step}**", expanded=False):
             st.markdown(f'<div class="logic-step">{logic}</div>', unsafe_allow_html=True)
     
     # Question 2 Logic
@@ -1078,37 +1340,37 @@ elif analysis_section == "🔬 Logic Full Guide":
     
     decisions = [
         ("Choice of Reference Period for October", 
-         "**Selected Q3 (Jul-Sep) 2023** over other periods because:\n"
-         "- Most recent complete data before October\n"
-         "- Similar seasonal patterns expected\n"
-         "- No major holidays that would distort patterns\n"
-         "- Sufficient sample size (92 days) for reliable estimation"),
+         "**Selected Q3 (Jul-Sep) 2023** over other periods because:\n\n"
+         "- **Most recent complete data** before October\n"
+         "- **Similar seasonal patterns** expected\n"
+         "- **No major holidays** that would distort patterns\n"
+         "- **Sufficient sample size** (92 days) for reliable estimation"),
         
         ("Median vs Mean for 'Typical Day'", 
-         "**Used Median (£170K) not Mean (£188K)** because:\n"
-         "- Mean inflated by high-value outliers\n"
-         "- Median more robust to extreme values\n"
-         "- Better represents 'typical' business day\n"
-         "- More stable for forecasting and planning"),
+         "**Used Median (£170K) not Mean (£188K)** because:\n\n"
+         "- **Mean inflated** by high-value outliers\n"
+         "- **Median more robust** to extreme values\n"
+         "- **Better represents** 'typical' business day\n"
+         "- **More stable** for forecasting and planning"),
         
         ("Weekday/Weekend Segmentation Approach", 
-         "**Used binary indicator (is_weekend)** not separate models because:\n"
-         "- Bimodality tests showed unimodal distribution\n"
-         "- Single model with indicator provides adequate fit\n"
-         "- Simpler implementation and interpretation\n"
-         "- Consistent with business operations patterns"),
+         "**Used binary indicator (is_weekend)** not separate models because:\n\n"
+         "- **Bimodality tests showed** unimodal distribution\n"
+         "- **Single model with indicator** provides adequate fit\n"
+         "- **Simpler implementation** and interpretation\n"
+         "- **Consistent** with business operations patterns"),
         
         ("Statistical Test Selection", 
-         "**Chose non-parametric tests exclusively** because:\n"
-         "- Distribution is non-normal (fails Shapiro-Wilk test)\n"
-         "- Parametric test assumptions violated\n"
-         "- Non-parametric tests more robust for this data\n"
-         "- Valid conclusions despite distribution shape")
+         "**Chose non-parametric tests exclusively** because:\n\n"
+         "- **Distribution is non-normal** (fails Shapiro-Wilk test)\n"
+         "- **Parametric test assumptions** violated\n"
+         "- **Non-parametric tests** more robust for this data\n"
+         "- **Valid conclusions** despite distribution shape")
     ]
     
     for i, (decision, rationale) in enumerate(decisions, 1):
-        with st.expander(f"Decision {i}: {decision}"):
-            st.markdown(f'<div class="logic-step">{rationale}</div>', unsafe_allow_html=True)
+        with st.expander(f"**Decision {i}: {decision}**", expanded=False):
+            st.markdown(f'<div class="decision-box">{rationale}</div>', unsafe_allow_html=True)
     
     # Assumptions and Limitations
     st.markdown("---")
@@ -1116,38 +1378,36 @@ elif analysis_section == "🔬 Logic Full Guide":
     
     assumptions = [
         ("Pattern Consistency Assumption", 
-         "**Assumption**: October 2023 follows same patterns as Q3 2023.\n"
-         "**Impact if False**: October estimate could be off by ±40%.\n"
+         "**Assumption**: October 2023 follows same patterns as Q3 2023.\n\n"
+         "**Impact if False**: October estimate could be off by ±40%.\n\n"
          "**Mitigation**: Use multiple reference periods, sensitivity analysis."),
         
         ("Business Stability Assumption", 
-         "**Assumption**: No major business changes during analysis period.\n"
-         "**Impact if False**: Trend analysis may be misleading.\n"
+         "**Assumption**: No major business changes during analysis period.\n\n"
+         "**Impact if False**: Trend analysis may be misleading.\n\n"
          "**Mitigation**: Check for external events, validate with business context."),
         
         ("Data Completeness Assumption", 
-         "**Assumption**: Missing October data is random, not systematic.\n"
-         "**Impact if False**: Bias in October estimation.\n"
+         "**Assumption**: Missing October data is random, not systematic.\n\n"
+         "**Impact if False**: Bias in October estimation.\n\n"
          "**Mitigation**: Investigate data collection process."),
         
         ("Outlier Legitimacy Assumption", 
-         "**Assumption**: High-value days are real business events.\n"
-         "**Impact if False**: Distribution characterization incorrect.\n"
+         "**Assumption**: High-value days are real business events.\n\n"
+         "**Impact if False**: Distribution characterization incorrect.\n\n"
          "**Mitigation**: Verify with transaction logs, business teams.")
     ]
     
     for i, (assumption, details) in enumerate(assumptions, 1):
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            st.warning(f"**Assumption {i}**")
-        with col2:
-            st.markdown(f'<div class="logic-step">{details}</div>', unsafe_allow_html=True)
+        with st.expander(f"**Assumption {i}: {assumption}**", expanded=False):
+            st.markdown(f'<div class="assumption-box">{details}</div>', unsafe_allow_html=True)
     
     # Conclusion
     st.markdown("---")
     st.markdown("### ✅ **Methodological Validation**")
     
-    st.success("""
+    st.markdown("""
+    <div class="method-box">
     **Validation Checks Performed:**
     
     1. **Statistical Assumption Checking**: Verified non-normality, justified non-parametric methods
@@ -1157,7 +1417,8 @@ elif analysis_section == "🔬 Logic Full Guide":
     5. **Business Alignment**: All methods chosen for business relevance, not just statistical elegance
     
     **Overall**: The methodology is **appropriate for the data characteristics** and **fit for business decision-making**.
-    """)
+    </div>
+    """, unsafe_allow_html=True)
 
 # SUMMARY & RECOMMENDATIONS SECTION
 else:
@@ -1194,28 +1455,35 @@ else:
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Overall Median", f"£{median_vol:,.0f}")
         st.metric("Distribution Skew", f"{skew:.2f}")
         st.metric("Bimodality Coeff", f"{bc:.3f}")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         weekday_mean = df[~df['is_weekend']]['volume_gbp'].mean()
         weekend_mean = df[df['is_weekend']]['volume_gbp'].mean()
         ratio = weekday_mean / weekend_mean
         st.metric("Weekday:Weekend Ratio", f"{ratio:.1f}x")
         st.metric("Q2-Q4 Volatility", "High (CV=0.90)")
         st.metric("Quarterly Significance", "None (p=0.964)")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("October Estimate", f"£{oct_estimate/1e6:.1f}M")
         st.metric("Missing October Data", "22 weekdays")
         st.metric("Data Completeness", "91%")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Executive Summary
     st.markdown("---")
-    st.subheader("🎯 **Executive Summary**")
+    st.markdown("### 🎯 **Executive Summary**")
     
     st.markdown("""
+    <div class="method-box">
     #### **Distribution Characteristics:**
     - **Right-skewed, unimodal distribution** (not bimodal despite weekday/weekend differences)
     - **Mean (£188K) > Median (£170K)** indicates positive skew
@@ -1232,11 +1500,12 @@ else:
     - **Best estimate**: £5.4-5.7 million total volume
     - **High uncertainty**: ±£0.9M margin of error (31% relative uncertainty)
     - **Confidence**: 95% CI = £4.8M to £6.6M
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Business Recommendations
     st.markdown("---")
-    st.subheader("🏢 **Business Recommendations for WISE**")
+    st.markdown("### 🏢 **Business Recommendations for WISE**")
     
     recommendations = [
         ("📊 **Reporting & Planning**", 
@@ -1272,13 +1541,14 @@ else:
     
     for i, (area, recommendation) in enumerate(recommendations, 1):
         with st.expander(f"{i}. {area}"):
-            st.write(recommendation)
+            st.markdown(f'<div class="logic-step">{recommendation}</div>', unsafe_allow_html=True)
     
     # Methodology Summary
     st.markdown("---")
-    st.subheader("🔬 **Methodology Summary**")
+    st.markdown("### 🔬 **Methodology Summary**")
     
     st.markdown("""
+    <div class="decision-box">
     #### **Key Analytical Approaches:**
     
     1. **Bimodality Assessment**:
@@ -1301,7 +1571,8 @@ else:
        - **Outlier analysis**: Business events, not errors
        - **Operational patterns**: Banking hours, payment cycles
        - **Seasonal considerations**: Quarterly consistency checks
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Final Insights
     st.markdown("---")
@@ -1310,32 +1581,41 @@ else:
     insight_col1, insight_col2 = st.columns(2)
     
     with insight_col1:
-        st.info("""
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown("""
         **Distribution Insight:**
         The distribution is **unimodal**, meaning a single forecasting model with weekday indicators is sufficient. Despite significant weekday/weekend differences, we don't need separate models for different customer segments based on volume.
         """)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.info("""
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown("""
         **Business Stability:**
         Quarterly volumes show **no significant changes**, indicating business stability. Observed fluctuations are within expected random variation bounds.
         """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with insight_col2:
-        st.warning("""
+        st.markdown('<div class="warning-box">', unsafe_allow_html=True)
+        st.markdown("""
         **Data Quality Alert:**
         The **October 2023 data gap** (missing 22 weekdays) significantly impacts analysis quality. Implement automated monitoring to prevent such gaps in future.
         """)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.success("""
+        st.markdown('<div class="method-box">', unsafe_allow_html=True)
+        st.markdown("""
         **Operational Efficiency:**
         The **6.1× weekday/weekend ratio** presents optimization opportunities. Consider differential staffing, processing schedules, and pricing strategies.
         """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Call to Action
     st.markdown("---")
     st.markdown("### 🚀 **Next Steps & Implementation**")
     
     st.markdown("""
+    <div class="logic-step">
     1. **Immediate Actions (Week 1-2):**
        - Update reporting dashboards to use **median-based metrics**
        - Implement **automated data quality checks**
@@ -1355,10 +1635,15 @@ else:
        - Track **bimodality coefficient** monthly
        - Monitor **effect sizes** for business changes
        - Regular **data quality audits**
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.success("""
-    ✅ **Analysis Complete** - This comprehensive analysis provides statistically rigorous insights 
-    with practical business recommendations for optimizing GBP to ZAR transfer operations.
-    """)
+    st.markdown("""
+    <div class="method-box" style="text-align: center; padding: 2rem;">
+    <h2 style="color: white; margin-bottom: 1rem;">✅ Analysis Complete</h2>
+    <p style="font-size: 1.1rem;">
+    This comprehensive analysis provides statistically rigorous insights with practical business recommendations for optimizing GBP to ZAR transfer operations.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
