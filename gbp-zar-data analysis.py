@@ -41,6 +41,12 @@ with st.sidebar:
     - Quarterly trend analysis
     - Missing data imputation
     - Business implications
+    
+    **Methods Used:**
+    - Statistical hypothesis testing
+    - Bootstrap uncertainty quantification
+    - KDE analysis
+    - Non-parametric comparisons
     """)
 
 # Load data
@@ -865,4 +871,5 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
 
