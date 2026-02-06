@@ -28,9 +28,9 @@ with st.sidebar:
         ["📊 Dataset Overview", 
          "📈 Q1: Distribution Analysis", 
          "📊 Q2: Quarterly Changes",
-         "🔮 Q3: October 2023 Estimation",
-         "🔬 Analytical Methodology",
-         "📋 Summary & Recommendations"]
+         "🔮 Q3: October 2023 Estimation",     
+         "📋 Summary & Recommendations",
+         "🔬 Analytical Methodology"]
     )
     
     st.markdown("---")
@@ -865,3 +865,4 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
