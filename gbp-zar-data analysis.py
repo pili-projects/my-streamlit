@@ -66,7 +66,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown('<h1 class="main-header">💰 GBP to ZAR Transfer Volume Analysis (Q2-Q4 2023)</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">💰 GBP to ZAR Volume Analysis (Q2-Q4 2023)</h1>', unsafe_allow_html=True)
 st.markdown("### Analyzing daily transfer volumes with focus on **bimodality** assessment")
 
 # Sidebar for navigation
@@ -1095,4 +1095,5 @@ else:
     st.success("""
     ✅ **Analysis Complete** - This comprehensive analysis provides statistically rigorous insights 
     with practical business recommendations for optimizing GBP to ZAR transfer operations.
+
     """)
