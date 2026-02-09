@@ -70,6 +70,15 @@ def load_data():
 
 df = load_data()
 
+# Helper function to format dates in dataframes for display
+def format_dataframe_dates(df, date_format='%Y-%m-%d'):
+    """Format datetime columns to date-only for display"""
+    df_formatted = df.copy()
+    for col in df_formatted.columns:
+        if pd.api.types.is_datetime64_any_dtype(df_formatted[col]):
+            df_formatted[col] = df_formatted[col].dt.strftime(date_format)
+    return df_formatted
+
 # DATASET OVERVIEW SECTION
 if analysis_section == "📊 Dataset Overview":
     st.header("📊 Dataset Overview")
@@ -79,7 +88,9 @@ if analysis_section == "📊 Dataset Overview":
     
     with col1:
         st.metric("Total Days", f"{len(df):,}")
-        st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
+        start_date = df['posting_date'].min().strftime('%b %d, %Y')
+        end_date = df['posting_date'].max().strftime('%b %d, %Y')
+        st.metric("Date Range", f"{start_date} to {end_date}")
     
     with col2:
         total_volume = df['volume_gbp'].sum()
@@ -97,11 +108,17 @@ if analysis_section == "📊 Dataset Overview":
     
     with col1:
         st.write("**First 10 records:**")
-        st.dataframe(df.head(10), use_container_width=True)
+        # Format dates before display
+        display_df = df.head(10).copy()
+        display_df['posting_date'] = display_df['posting_date'].dt.strftime('%Y-%m-%d')
+        st.dataframe(display_df, use_container_width=True)
     
     with col2:
         st.write("**Last 10 records:**")
-        st.dataframe(df.tail(10), use_container_width=True)
+        # Format dates before display
+        display_df = df.tail(10).copy()
+        display_df['posting_date'] = display_df['posting_date'].dt.strftime('%Y-%m-%d')
+        st.dataframe(display_df, use_container_width=True)
     
     # Basic statistics
     st.subheader("Basic Statistics")
@@ -281,7 +298,9 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         # Show top outliers
         if len(outliers) > 0:
             st.subheader("Top 5 High-Value Outlier Days")
-            outlier_display = outliers.nlargest(5, 'volume_gbp')[['posting_date', 'volume_gbp', 'weekday']]
+            outlier_display = outliers.nlargest(5, 'volume_gbp')[['posting_date', 'volume_gbp', 'weekday']].copy()
+            # Format the date column
+            outlier_display['posting_date'] = outlier_display['posting_date'].dt.strftime('%Y-%m-%d')
             outlier_display['volume_gbp'] = outlier_display['volume_gbp'].apply(lambda x: f"£{x:,.0f}")
             st.dataframe(outlier_display, use_container_width=True)
     
@@ -511,6 +530,8 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     # Show available data
     st.subheader("Available October Data")
     oct_display = oct_2023[['posting_date', 'volume_gbp', 'weekday']].copy()
+    # Format the date column
+    oct_display['posting_date'] = oct_display['posting_date'].dt.strftime('%Y-%m-%d')
     oct_display['volume_gbp'] = oct_display['volume_gbp'].apply(lambda x: f"£{x:,.2f}")
     st.dataframe(oct_display, use_container_width=True)
     
@@ -871,9 +892,3 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
-
-
-
-
-
-
