@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import warnings
 from datetime import datetime
+import io
 
 # Page config
 st.set_page_config(
@@ -52,21 +53,45 @@ with st.sidebar:
 # Load data
 @st.cache_data
 def load_data():
-    url = "https://drive.google.com/uc?id=1BK9eVWAu2LCDJ2haDYafoKhPyWP2tqCl"
-    df = pd.read_csv(url)
-    df['posting_date'] = pd.to_datetime(df['posting_date'])
-    df = df.sort_values('posting_date').reset_index(drop=True)
-    
-    # Feature engineering
-    df['year'] = df['posting_date'].dt.year
-    df['month'] = df['posting_date'].dt.month
-    df['quarter'] = df['posting_date'].dt.quarter
-    df['weekday'] = df['posting_date'].dt.day_name()
-    df['day_of_week'] = df['posting_date'].dt.dayofweek
-    df['is_weekend'] = df['day_of_week'].isin([5, 6])
-    df['month_name'] = df['posting_date'].dt.strftime('%B')
-    
-    return df
+    try:
+        url = "https://drive.google.com/uc?id=1BK9eVWAu2LCDJ2haDYafoKhPyWP2tqCl"
+        df = pd.read_csv(url)
+        
+        if df.empty:
+            st.error("The dataset is empty. Please check the data source.")
+            return pd.DataFrame()
+        
+        # Check required columns
+        required_columns = ['posting_date', 'volume_gbp']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            st.error(f"Missing required columns: {missing_columns}")
+            return pd.DataFrame()
+        
+        df['posting_date'] = pd.to_datetime(df['posting_date'], errors='coerce')
+        
+        # Check for invalid dates
+        invalid_dates = df['posting_date'].isna().sum()
+        if invalid_dates > 0:
+            st.warning(f"Found {invalid_dates} invalid dates that were converted to NaT")
+        
+        df = df.sort_values('posting_date').reset_index(drop=True)
+        
+        # Feature engineering
+        df['year'] = df['posting_date'].dt.year
+        df['month'] = df['posting_date'].dt.month
+        df['quarter'] = df['posting_date'].dt.quarter
+        df['weekday'] = df['posting_date'].dt.day_name()
+        df['day_of_week'] = df['posting_date'].dt.dayofweek
+        df['is_weekend'] = df['day_of_week'].isin([5, 6])
+        df['month_name'] = df['posting_date'].dt.strftime('%B')
+        
+        return df
+        
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return pd.DataFrame()
 
 df = load_data()
 
@@ -90,7 +115,7 @@ if analysis_section == "📊 Dataset Overview":
         st.metric("Total Days", f"{len(df):,}")
         start_date = df['posting_date'].min().strftime('%b %d, %Y')
         end_date = df['posting_date'].max().strftime('%b %d, %Y')
-        st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
+        st.metric("Date Range", f"{start_date} to {end_date}")
     
     with col2:
         total_volume = df['volume_gbp'].sum()
@@ -136,6 +161,10 @@ if analysis_section == "📊 Dataset Overview":
     ax.set_title('Daily Transfer Volumes (Apr-Dec 2023)')
     ax.grid(True, alpha=0.3)
     st.pyplot(fig)
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
 
 # Q1: DISTRIBUTION ANALYSIS SECTION
 elif analysis_section == "📈 Q1: Distribution Analysis":
@@ -152,7 +181,7 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         std_vol = df['volume_gbp'].std()
         skew = df['volume_gbp'].skew()
         kurt = df['volume_gbp'].kurtosis()
-        cv = std_vol / mean_vol
+        cv = std_vol / mean_vol if mean_vol != 0 else 0
         
         # Display metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -173,7 +202,7 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         n = len(volumes)
         skewness = stats.skew(volumes)
         kurtosis = stats.kurtosis(volumes, fisher=False)
-        bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3)))
+        bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3))) if n > 3 else 0
         is_bimodal = bc > (5/9)
         
         # Weekday vs weekend comparison
@@ -202,8 +231,8 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         # Histogram with KDE
         axes[0, 0].hist(df['volume_gbp'], bins=40, edgecolor='black', alpha=0.7, density=True)
         df['volume_gbp'].plot(kind='kde', ax=axes[0, 0], linewidth=2)
-        axes[0, 0].axvline(mean_vol, color='red', linestyle='--', linewidth=2, label=f'Mean')
-        axes[0, 0].axvline(median_vol, color='green', linestyle='--', linewidth=2, label=f'Median')
+        axes[0, 0].axvline(mean_vol, color='red', linestyle='--', linewidth=2, label=f'Mean: £{mean_vol:,.0f}')
+        axes[0, 0].axvline(median_vol, color='green', linestyle='--', linewidth=2, label=f'Median: £{median_vol:,.0f}')
         axes[0, 0].set_xlabel('Volume (GBP)')
         axes[0, 0].set_ylabel('Density')
         axes[0, 0].set_title('Overall Distribution')
@@ -232,17 +261,17 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         
         # Summary
         st.subheader("Summary of Distribution Characteristics")
-        st.write("""
+        st.write(f"""
         **Key Findings:**
-        1. **Right-skewed** (mean > median, skewness = {:.2f})
+        1. **Right-skewed** (mean > median, skewness = {skew:.2f})
         2. **Unimodal** (single peak despite weekday/weekend differences)
         3. **Non-normal** (heavy-tailed distribution)
-        4. **High variability** (CV = {:.2f})
+        4. **High variability** (CV = {cv:.2f})
         5. **Significant weekday/weekend differences** (p < 0.001)
         
         **Bimodality Conclusion:** The distribution is **NOT bimodal**. Despite significant differences between 
         weekday and weekend volumes, the overall distribution shows a single peak.
-        """.format(skew, cv))
+        """)
     
     with tab2:
         st.subheader("1b) What real world cause do you think is behind this shape of distribution?")
@@ -250,7 +279,7 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         # Calculate business metrics
         weekday_mean = df[~df['is_weekend']]['volume_gbp'].mean()
         weekend_mean = df[df['is_weekend']]['volume_gbp'].mean()
-        ratio = weekday_mean / weekend_mean
+        ratio = weekday_mean / weekend_mean if weekend_mean != 0 else 0
         
         # Outlier analysis
         Q1 = df['volume_gbp'].quantile(0.25)
@@ -361,6 +390,10 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         4. **Planning**: Maintain 30-40% buffer capacity for high-volume days
         5. **Segmentation**: Focus on transaction behavior rather than volume tiers
         """)
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
 
 # Q2: QUARTERLY ANALYSIS SECTION
 elif analysis_section == "📊 Q2: Quarterly Changes":
@@ -389,13 +422,13 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     
     with col2:
         q3_median = quarterly_stats.loc[3, 'median']
-        q2_q3_change = ((q3_median - q2_median) / q2_median * 100)
+        q2_q3_change = ((q3_median - q2_median) / q2_median * 100) if q2_median != 0 else 0
         st.metric("Q3 Median", f"£{q3_median:,.0f}")
         st.metric("Q2→Q3 Change", f"{q2_q3_change:+.1f}%")
     
     with col3:
         q4_median = quarterly_stats.loc[4, 'median']
-        q3_q4_change = ((q4_median - q3_median) / q3_median * 100)
+        q3_q4_change = ((q4_median - q3_median) / q3_median * 100) if q3_median != 0 else 0
         st.metric("Q4 Median", f"£{q4_median:,.0f}")
         st.metric("Q3→Q4 Change", f"{q3_q4_change:+.1f}%")
     
@@ -432,7 +465,7 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
         y_reshaped = y_arr.reshape(1, -1)
         greater = np.sum(x_reshaped > y_reshaped)
         less = np.sum(x_reshaped < y_reshaped)
-        delta = (greater - less) / (len(x_arr) * len(y_arr))
+        delta = (greater - less) / (len(x_arr) * len(y_arr)) if len(x_arr) * len(y_arr) > 0 else 0
         return delta
     
     with col2:
@@ -500,6 +533,10 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
     - Focus on **longer-term trends** (6+ months)
     - Investigate only if **effect size becomes meaningful** (|δ| ≥ 0.33)
     """)
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
 
 # Q3: OCTOBER 2023 ESTIMATION SECTION
 elif analysis_section == "🔮 Q3: October 2023 Estimation":
@@ -614,7 +651,7 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
         st.metric("95% CI Range", f"£{ci_range/1e6:.1f}M")
     
     with col4:
-        relative_uncertainty = (ci_range / mean_estimate * 100)
+        relative_uncertainty = (ci_range / mean_estimate * 100) if mean_estimate != 0 else 0
         st.metric("Relative Uncertainty", f"{relative_uncertainty:.0f}%")
     
     # Confidence intervals
@@ -673,6 +710,10 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     2. Seasonal effects in October not captured in Q3
     3. Business events in October not accounted for
     """)
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
 
 # ANALYTICAL METHODOLOGY SECTION
 elif analysis_section == "🔬 Analytical Methodology":
@@ -694,7 +735,7 @@ elif analysis_section == "🔬 Analytical Methodology":
         with col1:
             st.metric("Total Records", len(df))
         with col2:
-            st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
+            st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d, %Y')} to {df['posting_date'].max().strftime('%b %d, %Y')}")
         with col3:
             st.metric("Total Volume", f"£{df['volume_gbp'].sum():,.0f}")
         
@@ -752,7 +793,7 @@ elif analysis_section == "🔬 Analytical Methodology":
         st.caption(f"Showing rows {start_idx + 1} to {min(end_idx, len(display_df))} of {len(display_df)} total records")
         
         # Download button
-        csv = df.to_csv(index=False).encode('utf-8')
+        csv = df.to_csv(index=False)
         st.download_button(
             label="📥 Download Complete Dataset (CSV)",
             data=csv,
@@ -763,7 +804,7 @@ elif analysis_section == "🔬 Analytical Methodology":
         
         # Data dictionary
         st.subheader("Data Dictionary")
-        data_dict = {
+        data_dict = pd.DataFrame({
             "Column Name": ["posting_date", "volume_gbp", "year", "month", "quarter", "weekday", "day_of_week", "is_weekend", "month_name"],
             "Description": [
                 "Date of the transaction",
@@ -787,8 +828,8 @@ elif analysis_section == "🔬 Analytical Methodology":
                 "bool",
                 "object (string)"
             ]
-        }
-        st.dataframe(pd.DataFrame(data_dict), use_container_width=True)
+        })
+        st.dataframe(data_dict, use_container_width=True)
         
         # Basic statistics
         st.subheader("Dataset Statistics")
@@ -802,17 +843,23 @@ elif analysis_section == "🔬 Analytical Methodology":
         
         with col2:
             st.write("**Date Range Statistics:**")
+            
+            # Create statistics as strings to prevent date conversion
             date_stats = {
-                "Start Date": df['posting_date'].min().date(),
-                "End Date": df['posting_date'].max().date(),
-                "Total Days": len(df),
-                "Missing Days": 0,  # Assuming no missing dates in sequence
-                "Weekday Days": len(df[~df['is_weekend']]),
-                "Weekend Days": len(df[df['is_weekend']]),
-                "Months Covered": df['month'].nunique(),
-                "Quarters Covered": df['quarter'].nunique()
+                "Start Date": str(df['posting_date'].min().date()),
+                "End Date": str(df['posting_date'].max().date()),
+                "Total Days": str(len(df)),
+                "Missing Days": "0",  # Assuming no missing dates in sequence
+                "Weekday Days": str(len(df[~df['is_weekend']])),
+                "Weekend Days": str(len(df[df['is_weekend']])),
+                "Months Covered": str(df['month'].nunique()),
+                "Quarters Covered": str(df['quarter'].nunique())
             }
-            st.dataframe(pd.DataFrame.from_dict(date_stats, orient='index', columns=['Value']), use_container_width=True)
+            
+            # Create dataframe with explicit dtypes
+            date_stats_df = pd.DataFrame(list(date_stats.items()), columns=['Statistic', 'Value'])
+            
+            st.dataframe(date_stats_df.set_index('Statistic'), use_container_width=True)
     
     with tab2:
         st.subheader("Question 1: Distribution Analysis Methodology")
@@ -892,7 +939,7 @@ elif analysis_section == "🔬 Analytical Methodology":
             n = len(volumes)
             skewness = stats.skew(volumes)
             kurtosis = stats.kurtosis(volumes, fisher=False)
-            bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3)))
+            bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3))) if n > 3 else 0
             
             st.write(f"- n (sample size) = {n:,}")
             st.write(f"- Skewness = {skewness:.4f}")
@@ -987,7 +1034,7 @@ elif analysis_section == "🔬 Analytical Methodology":
                 y_reshaped = y_arr.reshape(1, -1)
                 greater = np.sum(x_reshaped > y_reshaped)
                 less = np.sum(x_reshaped < y_reshaped)
-                delta = (greater - less) / (len(x_arr) * len(y_arr))
+                delta = (greater - less) / (len(x_arr) * len(y_arr)) if len(x_arr) * len(y_arr) > 0 else 0
                 return delta
             
             delta_q2_q3 = cliffs_delta(Q2_data, Q3_data)
@@ -1112,11 +1159,11 @@ ci_95 = np.percentile(bootstrap_totals, [2.5, 97.5])
             """, language='python')
             
             st.write("**Simulation Parameters:**")
-            sim_params = {
+            sim_params = pd.DataFrame({
                 "Parameter": ["Number of simulations", "Reference period", "Missing days", "Available days", "Weekday matching", "Fallback method"],
                 "Value": ["1,000", "Q3 (Jul-Sep 2023)", "22 weekdays", "9 weekend days", "Same weekday in Q3", "Q3 median"]
-            }
-            st.dataframe(pd.DataFrame(sim_params), use_container_width=True)
+            })
+            st.dataframe(sim_params, use_container_width=True)
     
     # Key Methodological Decisions
     st.subheader("Key Methodological Decisions")
@@ -1134,6 +1181,10 @@ ci_95 = np.percentile(bootstrap_totals, [2.5, 97.5])
     for question, answer in decisions:
         with st.expander(f"❓ {question}"):
             st.write(answer)
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
 
 # SUMMARY & RECOMMENDATIONS SECTION
 else:
@@ -1152,7 +1203,7 @@ else:
     n = len(volumes)
     skewness = stats.skew(volumes)
     kurtosis = stats.kurtosis(volumes, fisher=False)
-    bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3)))
+    bc = (skewness**2 + 1) / (kurtosis + 3*(n-1)**2/((n-2)*(n-3))) if n > 3 else 0
     
     col1, col2, col3 = st.columns(3)
     
@@ -1164,7 +1215,7 @@ else:
     with col2:
         weekday_mean = df[~df['is_weekend']]['volume_gbp'].mean()
         weekend_mean = df[df['is_weekend']]['volume_gbp'].mean()
-        ratio = weekday_mean / weekend_mean
+        ratio = weekday_mean / weekend_mean if weekend_mean != 0 else 0
         st.metric("Weekday:Weekend Ratio", f"{ratio:.1f}x")
         st.metric("Data Completeness", "91%")
     
@@ -1185,12 +1236,12 @@ else:
     # Executive Summary
     st.subheader("Executive Summary")
     
-    st.write("""
+    st.write(f"""
     **Distribution Characteristics:**
     - Right-skewed, unimodal distribution (not bimodal)
-    - Mean (£188K) > Median (£170K) indicates positive skew
-    - High variability (CV = 0.90) with legitimate business outliers
-    - Significant weekday/weekend differences (6.1× higher on weekdays)
+    - Mean (£{mean_vol:,.0f}K) > Median (£{median_vol:,.0f}K) indicates positive skew
+    - High variability (CV = {(df['volume_gbp'].std() / mean_vol if mean_vol != 0 else 0):.2f}) with legitimate business outliers
+    - Significant weekday/weekend differences ({ratio:.1f}× higher on weekdays)
     
     **Quarterly Analysis:**
     - No statistically significant differences between quarters (p = 0.964)
@@ -1208,9 +1259,9 @@ else:
     st.subheader("Business Recommendations for WISE")
     
     recommendations = [
-        ("Use median (£170K) not mean for 'typical day' reporting", "Mean inflated by outliers"),
+        (f"Use median (£{median_vol:,.0f}K) not mean for 'typical day' reporting", "Mean inflated by outliers"),
         ("Apply non-parametric tests exclusively", "Data is non-normal"),
-        ("Build separate models for weekdays and weekends", "6.1× volume difference"),
+        ("Build separate models for weekdays and weekends", f"{ratio:.1f}× volume difference"),
         ("Maintain 30-40% buffer capacity", "High variability in daily volumes"),
         ("Segment by transaction behavior, not volume", "Unimodal distribution"),
         ("Implement automated data quality checks", "Prevent gaps like October 2023"),
@@ -1242,4 +1293,7 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
-
+    
+    # Navigation hint
+    st.markdown("---")
+    st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
