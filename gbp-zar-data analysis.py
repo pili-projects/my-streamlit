@@ -90,7 +90,7 @@ if analysis_section == "📊 Dataset Overview":
         st.metric("Total Days", f"{len(df):,}")
         start_date = df['posting_date'].min().strftime('%b %d, %Y')
         end_date = df['posting_date'].max().strftime('%b %d, %Y')
-        st.metric("Date Range", f"{start_date} to {end_date}")
+        st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
     
     with col2:
         total_volume = df['volume_gbp'].sum()
@@ -892,3 +892,4 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
