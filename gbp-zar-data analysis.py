@@ -115,7 +115,7 @@ if analysis_section == "📊 Dataset Overview":
         st.metric("Total Days", f"{len(df):,}")
         start_date = df['posting_date'].min().strftime('%b %d, %Y')
         end_date = df['posting_date'].max().strftime('%b %d, %Y')
-        st.metric("Date Range", f"{start_date} to {end_date}")
+        st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
     
     with col2:
         total_volume = df['volume_gbp'].sum()
@@ -735,7 +735,7 @@ elif analysis_section == "🔬 Analytical Methodology":
         with col1:
             st.metric("Total Records", len(df))
         with col2:
-            st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d, %Y')} to {df['posting_date'].max().strftime('%b %d, %Y')}")
+            st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
         with col3:
             st.metric("Total Volume", f"£{df['volume_gbp'].sum():,.0f}")
         
@@ -1297,3 +1297,4 @@ else:
     # Navigation hint
     st.markdown("---")
     st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
+
