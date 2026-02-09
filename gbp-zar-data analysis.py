@@ -694,7 +694,7 @@ elif analysis_section == "🔬 Analytical Methodology":
         with col1:
             st.metric("Total Records", len(df))
         with col2:
-            st.metric("Date Range", f"{df['posting_date'].min().date()} to {df['posting_date'].max().date()}")
+            st.metric("Date Range", f"{df['posting_date'].min().strftime('%b %d')} to {df['posting_date'].max().strftime('%b %d')}")
         with col3:
             st.metric("Total Volume", f"£{df['volume_gbp'].sum():,.0f}")
         
@@ -1242,3 +1242,4 @@ else:
     """)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
+
