@@ -30,7 +30,7 @@ with st.sidebar:
          "📈 Q1: Distribution Analysis", 
          "📊 Q2: Quarterly Changes",
          "🔮 Q3: October 2023 Estimation",     
-         "📋 Summary & Recommendations",
+         "📋 Summary",
          "🔬 Analytical Methodology"]
     )
     
@@ -1297,4 +1297,5 @@ else:
     # Navigation hint
     st.markdown("---")
     st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
+
 
