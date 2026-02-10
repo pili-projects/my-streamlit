@@ -6,6 +6,10 @@ from scipy import stats
 import warnings
 from datetime import datetime
 import io
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.figure_factory as ff
 
 # Page config
 st.set_page_config(
@@ -133,14 +137,12 @@ if analysis_section == "📊 Dataset Overview":
     
     with col1:
         st.write("**First 10 records:**")
-        # Format dates before display
         display_df = df.head(10).copy()
         display_df['posting_date'] = display_df['posting_date'].dt.strftime('%Y-%m-%d')
         st.dataframe(display_df, use_container_width=True)
     
     with col2:
         st.write("**Last 10 records:**")
-        # Format dates before display
         display_df = df.tail(10).copy()
         display_df['posting_date'] = display_df['posting_date'].dt.strftime('%Y-%m-%d')
         st.dataframe(display_df, use_container_width=True)
@@ -151,16 +153,68 @@ if analysis_section == "📊 Dataset Overview":
     stats_df.index = ['Count', 'Mean', 'Std Dev', 'Min', '25%', '50% (Median)', '75%', 'Max']
     st.dataframe(stats_df, use_container_width=True)
     
-    # Time series plot
+    # Time series plot with Plotly
     st.subheader("Daily Volume Time Series")
-    fig, ax = plt.subplots(figsize=(12, 4))
-    ax.plot(df['posting_date'], df['volume_gbp'], linewidth=1, alpha=0.7)
-    ax.fill_between(df['posting_date'], df['volume_gbp'], alpha=0.3)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Volume (GBP)')
-    ax.set_title('Daily Transfer Volumes (Apr-Dec 2023)')
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
+    
+    # Create interactive time series plot
+    fig = go.Figure()
+    
+    # Add line trace
+    fig.add_trace(go.Scatter(
+        x=df['posting_date'],
+        y=df['volume_gbp'],
+        mode='lines',
+        name='Daily Volume',
+        line=dict(color='blue', width=2),
+        hovertemplate='Date: %{x|%Y-%m-%d}<br>Volume: £%{y:,.0f}<extra></extra>'
+    ))
+    
+    # Add area fill
+    fig.add_trace(go.Scatter(
+        x=df['posting_date'],
+        y=df['volume_gbp'],
+        mode='none',
+        fill='tozeroy',
+        fillcolor='rgba(0, 100, 255, 0.1)',
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        title='Daily Transfer Volumes (Apr-Dec 2023)',
+        xaxis_title='Date',
+        yaxis_title='Volume (GBP)',
+        hovermode='x unified',
+        template='plotly_white',
+        height=400,
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    # Add range slider
+    fig.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
+    
+    # Format y-axis
+    fig.update_yaxes(tickprefix="£", tickformat=",.0f")
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     # Navigation hint
     st.markdown("---")
@@ -223,41 +277,142 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
             st.write(f"- KS test p-value: **{ks_p:.4f}**")
             st.write(f"- Conclusion: **{'Significantly different' if ks_p < 0.05 else 'Not significantly different'}**")
         
-        # Distribution visualizations
+        # Distribution visualizations with Plotly
         st.subheader("Distribution Visualizations")
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+        # Create subplots with Plotly
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=('Overall Distribution with KDE', 'Boxplot: Spread & Outliers',
+                           'Q-Q Plot (Normality Check)', 'Weekday vs Weekend Comparison'),
+            vertical_spacing=0.12,
+            horizontal_spacing=0.1
+        )
         
-        # Histogram with KDE
-        axes[0, 0].hist(df['volume_gbp'], bins=40, edgecolor='black', alpha=0.7, density=True)
-        df['volume_gbp'].plot(kind='kde', ax=axes[0, 0], linewidth=2)
-        axes[0, 0].axvline(mean_vol, color='red', linestyle='--', linewidth=2, label=f'Mean: £{mean_vol:,.0f}')
-        axes[0, 0].axvline(median_vol, color='green', linestyle='--', linewidth=2, label=f'Median: £{median_vol:,.0f}')
-        axes[0, 0].set_xlabel('Volume (GBP)')
-        axes[0, 0].set_ylabel('Density')
-        axes[0, 0].set_title('Overall Distribution')
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
+        # 1. Histogram with KDE
+        fig.add_trace(
+            go.Histogram(
+                x=df['volume_gbp'],
+                name="Histogram",
+                nbinsx=40,
+                opacity=0.7,
+                marker_color='blue',
+                hovertemplate="Volume: £%{x:,.0f}<br>Count: %{y}<extra></extra>"
+            ),
+            row=1, col=1
+        )
         
-        # Boxplot
-        axes[0, 1].boxplot(df['volume_gbp'], vert=True)
-        axes[0, 1].set_ylabel('Volume (GBP)')
-        axes[0, 1].set_title('Boxplot: Spread & Outliers')
-        axes[0, 1].grid(True, alpha=0.3, axis='y')
+        # Add KDE line
+        from scipy.stats import gaussian_kde
+        kde = gaussian_kde(df['volume_gbp'])
+        x_range = np.linspace(df['volume_gbp'].min(), df['volume_gbp'].max(), 200)
+        y_kde = kde(x_range)
         
-        # Q-Q plot
-        stats.probplot(df['volume_gbp'], dist="norm", plot=axes[1, 0])
-        axes[1, 0].set_title('Q-Q Plot (Normality Check)')
-        axes[1, 0].grid(True, alpha=0.3)
+        fig.add_trace(
+            go.Scatter(
+                x=x_range,
+                y=y_kde,
+                mode='lines',
+                name='KDE',
+                line=dict(color='red', width=2),
+                hovertemplate="Volume: £%{x:,.0f}<br>Density: %{y:.4f}<extra></extra>"
+            ),
+            row=1, col=1
+        )
         
-        # Weekday vs weekend comparison
-        axes[1, 1].boxplot([weekday_data, weekend_data], labels=['Weekdays', 'Weekends'])
-        axes[1, 1].set_ylabel('Volume (GBP)')
-        axes[1, 1].set_title('Weekday vs Weekend Comparison')
-        axes[1, 1].grid(True, alpha=0.3, axis='y')
+        # Add mean and median lines
+        fig.add_vline(x=mean_vol, line_dash="dash", line_color="red", 
+                     annotation_text=f"Mean: £{mean_vol:,.0f}", 
+                     annotation_position="top right", row=1, col=1)
+        fig.add_vline(x=median_vol, line_dash="dash", line_color="green", 
+                     annotation_text=f"Median: £{median_vol:,.0f}", 
+                     annotation_position="top left", row=1, col=1)
         
-        plt.tight_layout()
-        st.pyplot(fig)
+        # 2. Boxplot
+        fig.add_trace(
+            go.Box(
+                y=df['volume_gbp'],
+                name="All Data",
+                boxpoints='outliers',
+                marker_color='blue',
+                hovertemplate="Volume: £%{y:,.0f}<extra></extra>"
+            ),
+            row=1, col=2
+        )
+        
+        # 3. Q-Q plot
+        qq = stats.probplot(df['volume_gbp'], dist="norm")
+        x_theoretical = qq[0][0]
+        y_observed = qq[0][1]
+        
+        fig.add_trace(
+            go.Scatter(
+                x=x_theoretical,
+                y=y_observed,
+                mode='markers',
+                name='Observed',
+                marker=dict(color='blue', size=6),
+                hovertemplate="Theoretical: %{x:.2f}<br>Observed: %{y:,.0f}<extra></extra>"
+            ),
+            row=2, col=1
+        )
+        
+        # Add reference line
+        fig.add_trace(
+            go.Scatter(
+                x=[x_theoretical.min(), x_theoretical.max()],
+                y=[x_theoretical.min(), x_theoretical.max()],
+                mode='lines',
+                name='Normal Reference',
+                line=dict(color='red', dash='dash'),
+                showlegend=False,
+                hovertemplate=None
+            ),
+            row=2, col=1
+        )
+        
+        # 4. Weekday vs Weekend comparison boxplot
+        fig.add_trace(
+            go.Box(
+                y=weekday_data,
+                name='Weekdays',
+                boxpoints='outliers',
+                marker_color='green',
+                hovertemplate="Weekday Volume: £%{y:,.0f}<extra></extra>"
+            ),
+            row=2, col=2
+        )
+        
+        fig.add_trace(
+            go.Box(
+                y=weekend_data,
+                name='Weekends',
+                boxpoints='outliers',
+                marker_color='orange',
+                hovertemplate="Weekend Volume: £%{y:,.0f}<extra></extra>"
+            ),
+            row=2, col=2
+        )
+        
+        # Update layout
+        fig.update_layout(
+            height=800,
+            showlegend=True,
+            template='plotly_white',
+            hovermode='closest'
+        )
+        
+        # Update axes
+        fig.update_xaxes(title_text="Volume (GBP)", row=1, col=1, tickprefix="£", tickformat=",.0f")
+        fig.update_yaxes(title_text="Density/Count", row=1, col=1)
+        fig.update_xaxes(title_text="", row=1, col=2, showticklabels=False)
+        fig.update_yaxes(title_text="Volume (GBP)", row=1, col=2, tickprefix="£", tickformat=",.0f")
+        fig.update_xaxes(title_text="Theoretical Quantiles", row=2, col=1)
+        fig.update_yaxes(title_text="Observed Quantiles", row=2, col=1, tickprefix="£", tickformat=",.0f")
+        fig.update_xaxes(title_text="", row=2, col=2, showticklabels=False)
+        fig.update_yaxes(title_text="Volume (GBP)", row=2, col=2, tickprefix="£", tickformat=",.0f")
+        
+        st.plotly_chart(fig, use_container_width=True)
         
         # Summary
         st.subheader("Summary of Distribution Characteristics")
@@ -303,6 +458,51 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         # Real-world causes
         st.subheader("Real-World Causes & Business Drivers")
         
+        # Create interactive histogram with weekday/weekend overlay
+        fig = go.Figure()
+        
+        # Add weekday histogram
+        fig.add_trace(go.Histogram(
+            x=weekday_data,
+            name='Weekdays',
+            opacity=0.7,
+            marker_color='green',
+            nbinsx=30,
+            hovertemplate="Weekday Volume: £%{x:,.0f}<br>Count: %{y}<extra></extra>"
+        ))
+        
+        # Add weekend histogram
+        fig.add_trace(go.Histogram(
+            x=weekend_data,
+            name='Weekends',
+            opacity=0.7,
+            marker_color='orange',
+            nbinsx=30,
+            hovertemplate="Weekend Volume: £%{x:,.0f}<br>Count: %{y}<extra></extra>"
+        ))
+        
+        # Add means
+        fig.add_vline(x=weekday_mean, line_dash="dash", line_color="darkgreen",
+                     annotation_text=f"Weekday Mean: £{weekday_mean:,.0f}", 
+                     annotation_position="top right")
+        fig.add_vline(x=weekend_mean, line_dash="dash", line_color="darkorange",
+                     annotation_text=f"Weekend Mean: £{weekend_mean:,.0f}", 
+                     annotation_position="top left")
+        
+        fig.update_layout(
+            title='Volume Distribution: Weekdays vs Weekends',
+            xaxis_title='Volume (GBP)',
+            yaxis_title='Frequency',
+            barmode='overlay',
+            template='plotly_white',
+            height=500,
+            hovermode='x unified'
+        )
+        
+        fig.update_xaxes(tickprefix="£", tickformat=",.0f")
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
         st.write("""
         **Primary Drivers of Distribution Shape:**
         
@@ -328,10 +528,54 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         if len(outliers) > 0:
             st.subheader("Top 5 High-Value Outlier Days")
             outlier_display = outliers.nlargest(5, 'volume_gbp')[['posting_date', 'volume_gbp', 'weekday']].copy()
-            # Format the date column
             outlier_display['posting_date'] = outlier_display['posting_date'].dt.strftime('%Y-%m-%d')
             outlier_display['volume_gbp'] = outlier_display['volume_gbp'].apply(lambda x: f"£{x:,.0f}")
             st.dataframe(outlier_display, use_container_width=True)
+            
+            # Interactive outlier plot
+            fig = go.Figure()
+            
+            fig.add_trace(go.Scatter(
+                x=df['posting_date'],
+                y=df['volume_gbp'],
+                mode='lines+markers',
+                name='Daily Volume',
+                line=dict(color='blue', width=1),
+                marker=dict(size=4),
+                hovertemplate='Date: %{x|%Y-%m-%d}<br>Volume: £%{y:,.0f}<extra></extra>'
+            ))
+            
+            # Highlight outliers
+            fig.add_trace(go.Scatter(
+                x=outliers['posting_date'],
+                y=outliers['volume_gbp'],
+                mode='markers',
+                name='Outliers',
+                marker=dict(
+                    color='red',
+                    size=8,
+                    symbol='diamond'
+                ),
+                hovertemplate='<b>OUTLIER</b><br>Date: %{x|%Y-%m-%d}<br>Volume: £%{y:,.0f}<extra></extra>'
+            ))
+            
+            # Add outlier threshold line
+            fig.add_hline(y=upper_bound, line_dash="dash", line_color="red",
+                         annotation_text=f"Outlier Threshold: £{upper_bound:,.0f}",
+                         annotation_position="bottom right")
+            
+            fig.update_layout(
+                title='Daily Volumes with Outliers Highlighted',
+                xaxis_title='Date',
+                yaxis_title='Volume (GBP)',
+                template='plotly_white',
+                height=400,
+                hovermode='x unified'
+            )
+            
+            fig.update_yaxes(tickprefix="£", tickformat=",.0f")
+            
+            st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
         st.subheader("1c) What are some of the implications that this distribution would commonly have on analysis that you might do?")
@@ -389,6 +633,77 @@ elif analysis_section == "📈 Q1: Distribution Analysis":
         3. **Forecasting**: Build separate models for weekdays and weekends
         4. **Planning**: Maintain 30-40% buffer capacity for high-volume days
         5. **Segmentation**: Focus on transaction behavior rather than volume tiers
+        """)
+        
+        # Interactive distribution comparison
+        st.subheader("Interactive Distribution Comparison")
+        
+        # Create transformed data for comparison
+        df_transformed = df.copy()
+        df_transformed['log_volume'] = np.log1p(df_transformed['volume_gbp'])
+        df_transformed['sqrt_volume'] = np.sqrt(df_transformed['volume_gbp'])
+        
+        # Create interactive comparison plot
+        fig = make_subplots(
+            rows=1, cols=3,
+            subplot_titles=('Original Data', 'Log Transformation', 'Square Root Transformation'),
+            horizontal_spacing=0.1
+        )
+        
+        # Original data
+        fig.add_trace(
+            go.Histogram(
+                x=df_transformed['volume_gbp'],
+                nbinsx=40,
+                name='Original',
+                marker_color='blue',
+                hovertemplate="Volume: £%{x:,.0f}<br>Count: %{y}<extra></extra>"
+            ),
+            row=1, col=1
+        )
+        
+        # Log transformed
+        fig.add_trace(
+            go.Histogram(
+                x=df_transformed['log_volume'],
+                nbinsx=40,
+                name='Log Transformed',
+                marker_color='green',
+                hovertemplate="Log(Volume): %{x:.2f}<br>Count: %{y}<extra></extra>"
+            ),
+            row=1, col=2
+        )
+        
+        # Square root transformed
+        fig.add_trace(
+            go.Histogram(
+                x=df_transformed['sqrt_volume'],
+                nbinsx=40,
+                name='Sqrt Transformed',
+                marker_color='orange',
+                hovertemplate="√(Volume): %{x:.0f}<br>Count: %{y}<extra></extra>"
+            ),
+            row=1, col=3
+        )
+        
+        fig.update_layout(
+            height=400,
+            showlegend=False,
+            template='plotly_white',
+            hovermode='x unified'
+        )
+        
+        fig.update_xaxes(title_text="Volume (GBP)", row=1, col=1, tickprefix="£", tickformat=",.0f")
+        fig.update_xaxes(title_text="log(1 + Volume)", row=1, col=2)
+        fig.update_xaxes(title_text="√(Volume)", row=1, col=3)
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.write("""
+        **Visual Insights:**
+        - **Log transformation** helps reduce skewness but may over-transform
+        - **Square root transformation** offers a good balance for reducing skew
+        - **Recommendation**: Consider square root transformation for modeling
         """)
     
     # Navigation hint
@@ -479,38 +794,141 @@ elif analysis_section == "📊 Q2: Quarterly Changes":
         st.write(f"- Q2 → Q4: δ = {delta_q2_q4:+.3f}")
         st.write(f"- Q3 → Q4: δ = {delta_q3_q4:+.3f}")
         
-        # Interpretation
+        # Interpretation with color coding
+        def interpret_delta(delta):
+            abs_delta = abs(delta)
+            if abs_delta < 0.147:
+                return "🟢 Negligible effect"
+            elif abs_delta < 0.33:
+                return "🟡 Small effect"
+            elif abs_delta < 0.474:
+                return "🟠 Medium effect"
+            else:
+                return "🔴 Large effect"
+        
         st.write("**Interpretation:**")
-        st.write("|δ| < 0.147: Negligible effect")
-        st.write("0.147 ≤ |δ| < 0.33: Small effect")
-        st.write("0.33 ≤ |δ| < 0.474: Medium effect")
-        st.write("|δ| ≥ 0.474: Large effect")
+        st.write(f"- Q2 → Q3: {interpret_delta(delta_q2_q3)}")
+        st.write(f"- Q2 → Q4: {interpret_delta(delta_q2_q4)}")
+        st.write(f"- Q3 → Q4: {interpret_delta(delta_q3_q4)}")
     
-    # Visualizations
+    # Visualizations with Plotly
     st.subheader("Quarterly Comparison Visualizations")
     
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    # Create interactive figure
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=('Daily Volumes by Quarter', 'Quarterly Median Trend'),
+        horizontal_spacing=0.15
+    )
     
     # Boxplot by quarter
-    box_data = [Q2_data, Q3_data, Q4_data]
-    axes[0].boxplot(box_data, labels=['Q2', 'Q3', 'Q4'])
-    axes[0].set_ylabel('Volume (GBP)')
-    axes[0].set_title('Daily Volumes by Quarter')
-    axes[0].grid(True, alpha=0.3, axis='y')
+    fig.add_trace(
+        go.Box(
+            y=Q2_data,
+            name='Q2',
+            boxpoints='outliers',
+            marker_color='blue',
+            hovertemplate="Q2 Volume: £%{y:,.0f}<extra></extra>"
+        ),
+        row=1, col=1
+    )
     
-    # Median trend
+    fig.add_trace(
+        go.Box(
+            y=Q3_data,
+            name='Q3',
+            boxpoints='outliers',
+            marker_color='green',
+            hovertemplate="Q3 Volume: £%{y:,.0f}<extra></extra>"
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Box(
+            y=Q4_data,
+            name='Q4',
+            boxpoints='outliers',
+            marker_color='orange',
+            hovertemplate="Q4 Volume: £%{y:,.0f}<extra></extra>"
+        ),
+        row=1, col=1
+    )
+    
+    # Median trend line
     quarters = [2, 3, 4]
     medians = [quarterly_stats.loc[q, 'median'] for q in quarters]
     
-    axes[1].plot(quarters, medians, 'o-', markersize=8, linewidth=2)
-    axes[1].set_xlabel('Quarter')
-    axes[1].set_ylabel('Median Volume (GBP)')
-    axes[1].set_title('Quarterly Median Trend')
-    axes[1].set_xticks(quarters)
-    axes[1].grid(True, alpha=0.3)
+    fig.add_trace(
+        go.Scatter(
+            x=quarters,
+            y=medians,
+            mode='lines+markers',
+            name='Median Trend',
+            line=dict(color='red', width=3),
+            marker=dict(size=10),
+            hovertemplate="Q%{x}<br>Median: £%{y:,.0f}<extra></extra>"
+        ),
+        row=1, col=2
+    )
     
-    plt.tight_layout()
-    st.pyplot(fig)
+    # Add percentage change annotations
+    for i in range(len(quarters)-1):
+        change_pct = ((medians[i+1] - medians[i]) / medians[i] * 100) if medians[i] != 0 else 0
+        fig.add_annotation(
+            x=(quarters[i] + quarters[i+1]) / 2,
+            y=(medians[i] + medians[i+1]) / 2,
+            text=f"{change_pct:+.1f}%",
+            showarrow=False,
+            font=dict(size=12, color='red' if change_pct < 0 else 'green'),
+            row=1, col=2
+        )
+    
+    fig.update_layout(
+        height=500,
+        template='plotly_white',
+        hovermode='closest'
+    )
+    
+    fig.update_xaxes(title_text="Quarter", row=1, col=2, tickvals=quarters, ticktext=['Q2', 'Q3', 'Q4'])
+    fig.update_yaxes(title_text="Volume (GBP)", row=1, col=1, tickprefix="£", tickformat=",.0f")
+    fig.update_yaxes(title_text="Median Volume (GBP)", row=1, col=2, tickprefix="£", tickformat=",.0f")
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Interactive time series by quarter
+    st.subheader("Daily Volume Time Series (Color by Quarter)")
+    
+    fig = go.Figure()
+    
+    # Color mapping for quarters
+    colors = {2: 'blue', 3: 'green', 4: 'orange'}
+    
+    for quarter in [2, 3, 4]:
+        quarter_data = df_q2_q4[df_q2_q4['quarter'] == quarter]
+        fig.add_trace(go.Scatter(
+            x=quarter_data['posting_date'],
+            y=quarter_data['volume_gbp'],
+            mode='lines+markers',
+            name=f'Q{quarter}',
+            line=dict(color=colors[quarter], width=1.5),
+            marker=dict(size=4, color=colors[quarter]),
+            hovertemplate='Date: %{x|%Y-%m-%d}<br>Volume: £%{y:,.0f}<br>Quarter: Q%{customdata}<extra></extra>',
+            customdata=[quarter] * len(quarter_data)
+        ))
+    
+    fig.update_layout(
+        title='Daily Volumes Colored by Quarter',
+        xaxis_title='Date',
+        yaxis_title='Volume (GBP)',
+        template='plotly_white',
+        height=400,
+        hovermode='x unified'
+    )
+    
+    fig.update_yaxes(tickprefix="£", tickformat=",.0f")
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     # Conclusion
     st.subheader("Conclusion for Quarterly Analysis")
@@ -567,10 +985,43 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     # Show available data
     st.subheader("Available October Data")
     oct_display = oct_2023[['posting_date', 'volume_gbp', 'weekday']].copy()
-    # Format the date column
     oct_display['posting_date'] = oct_display['posting_date'].dt.strftime('%Y-%m-%d')
     oct_display['volume_gbp'] = oct_display['volume_gbp'].apply(lambda x: f"£{x:,.2f}")
     st.dataframe(oct_display, use_container_width=True)
+    
+    # Create interactive calendar heatmap - Fixed version
+    st.subheader("October 2023 Data Availability Calendar")
+    
+    # Create a calendar view using dataframe (simpler approach)
+    oct_calendar = pd.DataFrame(index=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+    
+    # Fill in the calendar
+    for week in range(5):
+        week_days = []
+        for day_of_week in range(7):
+            day_num = week * 7 + day_of_week + 1
+            if day_num <= 31:
+                date_str = f"2023-10-{day_num:02d}"
+                date_obj = pd.to_datetime(date_str)
+                if date_obj in oct_2023['posting_date'].values:
+                    week_days.append(f"✅ {day_num}")
+                else:
+                    week_days.append(f"❌ {day_num}")
+            else:
+                week_days.append("")
+        oct_calendar[f'Week {week+1}'] = week_days
+    
+    st.dataframe(oct_calendar, use_container_width=True)
+    
+    # Add legend
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Legend:**")
+        st.markdown("✅ = Data available")
+        st.markdown("❌ = Data missing")
+    with col2:
+        st.markdown("**Note:** All available data are weekends")
+        st.markdown("All weekdays are missing")
     
     # Estimation Methodology
     st.subheader("Estimation Methodology")
@@ -667,24 +1118,90 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
         st.info(f"**80% Confidence Interval:**\n£{ci_80[0]/1e6:.1f}M to £{ci_80[1]/1e6:.1f}M")
         st.write("Tighter range for less conservative estimates")
     
-    # Visualizations
+    # Interactive visualizations
     st.subheader("Visualizing Uncertainty")
     
-    fig, ax = plt.subplots(figsize=(10, 4))
+    # Create interactive histogram of bootstrap results
+    fig = go.Figure()
     
-    # Histogram of bootstrap totals
-    ax.hist(bootstrap_totals/1e6, bins=30, edgecolor='black', alpha=0.7)
-    ax.axvline(mean_estimate/1e6, color='red', linestyle='--', linewidth=2,
-                label=f'Mean: £{mean_estimate/1e6:.1f}M')
-    ax.axvline(ci_95[0]/1e6, color='gray', linestyle=':', alpha=0.7)
-    ax.axvline(ci_95[1]/1e6, color='gray', linestyle=':', alpha=0.7, label='95% CI')
-    ax.set_xlabel('Total October Volume (Million GBP)')
-    ax.set_ylabel('Frequency')
-    ax.set_title('Bootstrap Distribution of October 2023 Total')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+    # Histogram
+    fig.add_trace(go.Histogram(
+        x=bootstrap_totals/1e6,
+        nbinsx=40,
+        name='Bootstrap Distribution',
+        marker_color='blue',
+        opacity=0.7,
+        hovertemplate="Total Volume: £%{x:.1f}M<br>Count: %{y}<extra></extra>"
+    ))
     
-    st.pyplot(fig)
+    # Add mean line
+    fig.add_vline(x=mean_estimate/1e6, line_dash="dash", line_color="red", 
+                 annotation_text=f"Mean: £{mean_estimate/1e6:.1f}M", 
+                 annotation_position="top right")
+    
+    # Add confidence intervals
+    fig.add_vrect(x0=ci_95[0]/1e6, x1=ci_95[1]/1e6, 
+                  fillcolor="rgba(255, 0, 0, 0.1)", line_width=0,
+                  annotation_text="95% CI", annotation_position="top left")
+    
+    fig.add_vrect(x0=ci_80[0]/1e6, x1=ci_80[1]/1e6, 
+                  fillcolor="rgba(0, 255, 0, 0.1)", line_width=0,
+                  annotation_text="80% CI", annotation_position="bottom right")
+    
+    fig.update_layout(
+        title='Bootstrap Distribution of October 2023 Total Volume',
+        xaxis_title='Total October Volume (Million GBP)',
+        yaxis_title='Frequency',
+        template='plotly_white',
+        height=500,
+        hovermode='x unified'
+    )
+    
+    fig.update_xaxes(tickprefix="£", ticksuffix="M")
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Cumulative probability plot
+    st.subheader("Cumulative Probability Distribution")
+    
+    sorted_totals = np.sort(bootstrap_totals)
+    cumulative_prob = np.arange(1, len(sorted_totals) + 1) / len(sorted_totals)
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=sorted_totals/1e6,
+        y=cumulative_prob * 100,
+        mode='lines',
+        name='Cumulative Probability',
+        line=dict(color='blue', width=3),
+        hovertemplate="Volume: £%{x:.1f}M<br>Cumulative Probability: %{y:.1f}%<extra></extra>"
+    ))
+    
+    # Add reference lines for key percentiles
+    for percentile, color, label in [(50, 'green', 'Median'), (80, 'orange', '80% CI'), (95, 'red', '95% CI')]:
+        lower_bound = np.percentile(bootstrap_totals, (100-percentile)/2)/1e6
+        upper_bound = np.percentile(bootstrap_totals, 100-(100-percentile)/2)/1e6
+        
+        fig.add_vline(x=lower_bound, line_dash="dash", line_color=color, opacity=0.5)
+        fig.add_vline(x=upper_bound, line_dash="dash", line_color=color, opacity=0.5)
+        fig.add_vrect(x0=lower_bound, x1=upper_bound, 
+                      fillcolor=color, opacity=0.1, line_width=0,
+                      annotation_text=f"{percentile}% CI", annotation_position="top")
+    
+    fig.update_layout(
+        title='Cumulative Probability Distribution of October Total',
+        xaxis_title='Total October Volume (Million GBP)',
+        yaxis_title='Cumulative Probability (%)',
+        template='plotly_white',
+        height=400,
+        hovermode='x unified'
+    )
+    
+    fig.update_xaxes(tickprefix="£", ticksuffix="M")
+    fig.update_yaxes(ticksuffix="%")
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     # Final estimate
     st.subheader("Final October 2023 Estimate")
@@ -1255,6 +1772,39 @@ else:
     - 95% Confidence Interval: £4.8M to £6.6M
     """)
     
+    # Interactive summary visualization
+    st.subheader("Interactive Summary Dashboard")
+    
+    # Create summary visualization
+    summary_data = pd.DataFrame({
+        'Metric': ['Mean Volume', 'Median Volume', 'Weekday Mean', 'Weekend Mean', 'Q2 Median', 'Q3 Median', 'Q4 Median'],
+        'Value (GBP)': [
+            mean_vol,
+            median_vol,
+            weekday_mean,
+            weekend_mean,
+            df[df['quarter'] == 2]['volume_gbp'].median(),
+            df[df['quarter'] == 3]['volume_gbp'].median(),
+            df[df['quarter'] == 4]['volume_gbp'].median()
+        ],
+        'Category': ['Overall', 'Overall', 'Weekday/Weekend', 'Weekday/Weekend', 'Quarterly', 'Quarterly', 'Quarterly']
+    })
+    
+    fig = px.bar(summary_data, x='Metric', y='Value (GBP)', color='Category',
+                 title='Key Metrics Summary',
+                 hover_data={'Value (GBP)': ':,.0f'},
+                 labels={'Value (GBP)': 'Volume (GBP)', 'Metric': 'Metric'})
+    
+    fig.update_layout(
+        template='plotly_white',
+        height=400,
+        hovermode='x unified'
+    )
+    
+    fig.update_yaxes(tickprefix="£", tickformat=",.0f")
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
     # Recommendations
     st.subheader("Business Recommendations for WISE")
     
@@ -1291,6 +1841,32 @@ else:
     - Implement customer behavior segmentation
     - Optimize resource allocation based on volume patterns
     """)
+    
+    # Create implementation timeline
+    timeline_data = pd.DataFrame({
+        'Timeframe': ['Week 1-2', 'Month 1', 'Quarter 1'],
+        'Action': ['Reporting Updates', 'Model Development', 'Advanced Integration'],
+        'Tasks': [
+            'Update dashboards, data quality checks',
+            'Forecasting models, outlier protocol',
+            'Exchange rate integration, customer segmentation'
+        ],
+        'Priority': ['High', 'Medium', 'Low']
+    })
+    
+    # Timeline visualization
+    fig = px.timeline(timeline_data, x_start=[0, 1, 2], x_end=[2, 4, 13], y='Action',
+                      color='Priority', title='Implementation Timeline (in weeks)',
+                      hover_data=['Tasks'])
+    
+    fig.update_layout(
+        template='plotly_white',
+        height=300,
+        xaxis_title='Weeks from Start',
+        showlegend=True
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
     
