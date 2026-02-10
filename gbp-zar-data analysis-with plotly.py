@@ -1,3 +1,4 @@
+can you update the issues
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -973,55 +974,93 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
         st.metric("Missing Days", 31 - len(oct_2023))
     
     with col2:
-        st.metric("Weekend Days", f"{len(oct_2023)}")
-        st.metric("Weekday Days", "0")
+        # Count actual weekend days vs weekday days
+        weekend_days = len(oct_2023[oct_2023['is_weekend']])
+        weekday_days = len(oct_2023[~oct_2023['is_weekend']])
+        st.metric("Weekend Days Available", f"{weekend_days}")
+        st.metric("Weekday Days Available", f"{weekday_days}")
     
     with col3:
         oct_total_actual = oct_2023['volume_gbp'].sum()
         st.metric("Available Data Total", f"£{oct_total_actual:,.0f}")
     
-    st.warning("⚠️ **Critical Observation**: All available October data are WEEKENDS (Saturdays & Sundays). All WEEKDAYS in October are MISSING.")
+    # Show critical warning
+    if weekday_days == 0:
+        st.error("⚠️ **CRITICAL DATA GAP**: October 2023 has NO WEEKDAY data! Only weekend data available.")
+        st.warning("**Impact**: This significantly increases estimation uncertainty as weekdays typically have 6.1× higher volumes than weekends.")
     
     # Show available data
-    st.subheader("Available October Data")
-    oct_display = oct_2023[['posting_date', 'volume_gbp', 'weekday']].copy()
+    st.subheader("Available October Data (Only Weekends)")
+    oct_display = oct_2023[['posting_date', 'volume_gbp', 'weekday', 'is_weekend']].copy()
     oct_display['posting_date'] = oct_display['posting_date'].dt.strftime('%Y-%m-%d')
     oct_display['volume_gbp'] = oct_display['volume_gbp'].apply(lambda x: f"£{x:,.2f}")
     st.dataframe(oct_display, use_container_width=True)
     
-    # Create interactive calendar heatmap - Fixed version
+    # Create CORRECTED calendar heatmap
     st.subheader("October 2023 Data Availability Calendar")
     
-    # Create a calendar view using dataframe (simpler approach)
+    # Create a proper calendar grid
+    # October 2023 starts on Sunday (day 6)
     oct_calendar = pd.DataFrame(index=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
     
-    # Fill in the calendar
-    for week in range(5):
-        week_days = []
-        for day_of_week in range(7):
-            day_num = week * 7 + day_of_week + 1
-            if day_num <= 31:
-                date_str = f"2023-10-{day_num:02d}"
-                date_obj = pd.to_datetime(date_str)
-                if date_obj in oct_2023['posting_date'].values:
-                    week_days.append(f"✅ {day_num}")
-                else:
-                    week_days.append(f"❌ {day_num}")
-            else:
-                week_days.append("")
-        oct_calendar[f'Week {week+1}'] = week_days
+    # Get actual available dates
+    available_dates = set(oct_2023['posting_date'].dt.date)
     
+    # Fill calendar correctly
+    week_num = 1
+    week_data = {}
+    
+    for week_start in range(0, 31, 7):
+        week_days = []
+        for day_offset in range(7):
+            day_num = week_start + day_offset + 1
+            if day_num <= 31:
+                date_obj = pd.Timestamp(f'2023-10-{day_num:02d}')
+                date_formatted = date_obj.strftime('%Y-%m-%d')
+                weekday_name = date_obj.strftime('%a')
+                
+                if date_obj.date() in available_dates:
+                    day_str = f"✅ {day_num}"
+                else:
+                    day_str = f"❌ {day_num}"
+            else:
+                day_str = ""
+            week_days.append(day_str)
+        
+        # Reorder for display (Monday first)
+        # Monday=0, Tuesday=1, ..., Sunday=6
+        # We need to reorder based on actual October 2023 calendar
+        # Oct 1, 2023 was Sunday, so we need to rotate
+        week_days_ordered = []
+        for i in range(7):
+            day_of_week = (i + 6) % 7  # Adjust for Oct 1 being Sunday
+            if day_of_week < len(week_days):
+                week_days_ordered.append(week_days[day_of_week])
+        
+        oct_calendar[f'Week {week_num}'] = week_days_ordered
+        week_num += 1
+    
+    # Transpose for better display
     st.dataframe(oct_calendar, use_container_width=True)
     
-    # Add legend
+    # Add legend and explanation
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("**Legend:**")
         st.markdown("✅ = Data available")
         st.markdown("❌ = Data missing")
+    
     with col2:
-        st.markdown("**Note:** All available data are weekends")
-        st.markdown("All weekdays are missing")
+        st.markdown("**Important Note:**")
+        st.markdown("• All available data are **weekends only** (Saturdays & Sundays)")
+        st.markdown("• All **weekday data is missing** (22 days)")
+        st.markdown("• October 1, 2023 was a **Sunday**, October 2 was Monday")
+    
+    # Show which specific dates are available
+    st.subheader("Available Dates in October 2023")
+    available_list = sorted([d.strftime('%Y-%m-%d (%A)') for d in oct_2023['posting_date']])
+    for date_str in available_list:
+        st.write(f"• {date_str}")
     
     # Estimation Methodology
     st.subheader("Estimation Methodology")
@@ -1212,6 +1251,8 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     **With 95% Confidence:** Between **£{ci_95[0]/1e6:.1f}M** and **£{ci_95[1]/1e6:.1f}M**
     
     **Margin of Error:** ±£{(ci_95[1]-ci_95[0])/2e6:.1f}M
+    
+    **Relative Uncertainty:** {relative_uncertainty:.0f}% (due to 22 missing weekdays)
     """)
     
     # Assumptions
@@ -1223,9 +1264,10 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     3. Q3 data is representative of typical patterns
     
     **Limitations:**
-    1. High uncertainty due to 22 missing weekdays
+    1. **High uncertainty** due to 22 missing weekdays
     2. Seasonal effects in October not captured in Q3
     3. Business events in October not accounted for
+    4. **Only weekend data available** → limited reference for weekday estimation
     """)
     
     # Navigation hint
@@ -1766,10 +1808,10 @@ else:
     - All effect sizes negligible (Cliff's Delta < 0.147)
     
     **October 2023 Estimation:**
-    - Severe data gap: 22 missing weekdays (only weekends available)
-    - Best estimate: £5.4-5.7 million total volume
-    - High uncertainty: ±£0.9M margin of error (31% relative uncertainty)
-    - 95% Confidence Interval: £4.8M to £6.6M
+    - **Severe data gap**: 22 missing weekdays (only weekends available)
+    - **Best estimate**: £5.4-5.7 million total volume
+    - **High uncertainty**: ±£0.9M margin of error (31% relative uncertainty)
+    - **95% Confidence Interval**: £4.8M to £6.6M
     """)
     
     # Interactive summary visualization
@@ -1822,8 +1864,8 @@ else:
     for i, (rec, reason) in enumerate(recommendations, 1):
         st.write(f"{i}. **{rec}** - {reason}")
     
-    # Next Steps
-    st.subheader("Next Steps & Implementation")
+    # Next Steps - FIXED Timeline
+    st.subheader("Next Steps & Implementation Timeline")
     
     st.write("""
     **Immediate Actions (Week 1-2):**
@@ -1842,31 +1884,73 @@ else:
     - Optimize resource allocation based on volume patterns
     """)
     
-    # Create implementation timeline
+    # Create FIXED implementation timeline
     timeline_data = pd.DataFrame({
-        'Timeframe': ['Week 1-2', 'Month 1', 'Quarter 1'],
-        'Action': ['Reporting Updates', 'Model Development', 'Advanced Integration'],
-        'Tasks': [
-            'Update dashboards, data quality checks',
-            'Forecasting models, outlier protocol',
-            'Exchange rate integration, customer segmentation'
-        ],
-        'Priority': ['High', 'Medium', 'Low']
+        'Task': ['Reporting Updates', 'Data Quality Checks', 'Model Development', 'Outlier Protocol', 'Exchange Rate Integration'],
+        'Start Week': [1, 2, 3, 5, 9],
+        'End Week': [2, 3, 8, 8, 13],
+        'Duration': [1, 1, 5, 3, 4],
+        'Phase': ['Immediate', 'Immediate', 'Short-term', 'Short-term', 'Medium-term']
     })
     
-    # Timeline visualization
-    fig = px.timeline(timeline_data, x_start=[0, 1, 2], x_end=[2, 4, 13], y='Action',
-                      color='Priority', title='Implementation Timeline (in weeks)',
-                      hover_data=['Tasks'])
+    # Create Gantt chart timeline
+    fig = go.Figure()
+    
+    colors = {
+        'Immediate': 'red',
+        'Short-term': 'orange',
+        'Medium-term': 'green'
+    }
+    
+    for phase in timeline_data['Phase'].unique():
+        phase_data = timeline_data[timeline_data['Phase'] == phase]
+        
+        fig.add_trace(go.Bar(
+            x=phase_data['Duration'],
+            y=phase_data['Task'],
+            orientation='h',
+            name=phase,
+            marker_color=colors[phase],
+            hovertemplate='<b>%{y}</b><br>Start: Week %{customdata[0]}<br>End: Week %{customdata[1]}<br>Duration: %{x} weeks<extra></extra>',
+            customdata=phase_data[['Start Week', 'End Week']].values
+        ))
     
     fig.update_layout(
-        template='plotly_white',
-        height=300,
+        title='Implementation Timeline (in weeks)',
         xaxis_title='Weeks from Start',
-        showlegend=True
+        yaxis_title='Task',
+        barmode='stack',
+        template='plotly_white',
+        height=400,
+        hovermode='y'
     )
     
+    # Add week markers
+    for week in range(1, 14, 2):
+        fig.add_vline(x=week-0.5, line_dash="dash", line_color="gray", opacity=0.3)
+    
+    fig.update_xaxes(range=[0, 13], dtick=1)
+    
     st.plotly_chart(fig, use_container_width=True)
+    
+    # Alternative timeline visualization
+    st.subheader("Implementation Roadmap")
+    
+    roadmap_data = pd.DataFrame({
+        'Phase': ['Immediate (Week 1-2)', 'Short-term (Month 1)', 'Medium-term (Quarter 1)'],
+        'Key Deliverables': [
+            'Updated dashboards, Data quality alerts',
+            'Weekday/weekend models, Outlier investigation process',
+            'Exchange rate integration, Customer segmentation'
+        ],
+        'Success Metrics': [
+            'Median-based reporting implemented',
+            'Forecast accuracy improved by 15%',
+            'Resource optimization achieved'
+        ]
+    })
+    
+    st.dataframe(roadmap_data, use_container_width=True)
     
     st.success("✅ Analysis Complete - Comprehensive insights with practical business recommendations for optimizing GBP to ZAR transfer operations.")
     
