@@ -999,49 +999,80 @@ elif analysis_section == "🔮 Q3: October 2023 Estimation":
     # Create CORRECTED calendar heatmap
     st.subheader("October 2023 Data Availability Calendar")
     
-    # Create a proper calendar grid
-    # October 2023 starts on Sunday (day 6)
-    oct_calendar = pd.DataFrame(index=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
-    
     # Get actual available dates
     available_dates = set(oct_2023['posting_date'].dt.date)
     
-    # Fill calendar correctly
-    week_num = 1
-    week_data = {}
+    # Create calendar dictionary
+    calendar_dict = {}
+    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     
-    for week_start in range(0, 31, 7):
-        week_days = []
-        for day_offset in range(7):
-            day_num = week_start + day_offset + 1
-            if day_num <= 31:
-                date_obj = pd.Timestamp(f'2023-10-{day_num:02d}')
-                date_formatted = date_obj.strftime('%Y-%m-%d')
-                weekday_name = date_obj.strftime('%a')
-                
-                if date_obj.date() in available_dates:
-                    day_str = f"✅ {day_num}"
-                else:
-                    day_str = f"❌ {day_num}"
+    # Initialize calendar with empty lists for each weekday
+    for weekday in weekdays:
+        calendar_dict[weekday] = []
+    
+    # Fill calendar correctly - October 1, 2023 was a Sunday
+    # Let's map each date to its correct position
+    for date_obj in all_oct_dates:
+        day_num = date_obj.day
+        # Get actual day of week (0=Monday, 6=Sunday)
+        # Convert to our display order
+        day_of_week = date_obj.weekday()  # Monday=0, Sunday=6
+        
+        # Map to display order
+        if day_of_week == 0:  # Monday
+            weekday_key = 'Mon'
+        elif day_of_week == 1:  # Tuesday
+            weekday_key = 'Tue'
+        elif day_of_week == 2:  # Wednesday
+            weekday_key = 'Wed'
+        elif day_of_week == 3:  # Thursday
+            weekday_key = 'Thu'
+        elif day_of_week == 4:  # Friday
+            weekday_key = 'Fri'
+        elif day_of_week == 5:  # Saturday
+            weekday_key = 'Sat'
+        else:  # Sunday (6)
+            weekday_key = 'Sun'
+        
+        # Check if date is available
+        if date_obj.date() in available_dates:
+            calendar_dict[weekday_key].append(f"✅ {day_num}")
+        else:
+            calendar_dict[weekday_key].append(f"❌ {day_num}")
+    
+    # Now create weekly columns
+    max_weeks = 5
+    oct_calendar = pd.DataFrame(index=weekdays)
+    
+    for week in range(max_weeks):
+        week_data = []
+        for weekday in weekdays:
+            if week < len(calendar_dict[weekday]):
+                week_data.append(calendar_dict[weekday][week])
             else:
-                day_str = ""
-            week_days.append(day_str)
-        
-        # Reorder for display (Monday first)
-        # Monday=0, Tuesday=1, ..., Sunday=6
-        # We need to reorder based on actual October 2023 calendar
-        # Oct 1, 2023 was Sunday, so we need to rotate
-        week_days_ordered = []
-        for i in range(7):
-            day_of_week = (i + 6) % 7  # Adjust for Oct 1 being Sunday
-            if day_of_week < len(week_days):
-                week_days_ordered.append(week_days[day_of_week])
-        
-        oct_calendar[f'Week {week_num}'] = week_days_ordered
-        week_num += 1
+                week_data.append("")
+        oct_calendar[f'Week {week+1}'] = week_data
     
-    # Transpose for better display
     st.dataframe(oct_calendar, use_container_width=True)
+    
+    # Show exactly what dates are available
+    st.subheader("Available October Dates")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Available Dates:**")
+        available_list = sorted([(d.strftime('%Y-%m-%d'), d.strftime('%A')) for d in oct_2023['posting_date']], 
+                               key=lambda x: x[0])
+        for date_str, day_name in available_list:
+            st.write(f"• {date_str} ({day_name})")
+    
+    with col2:
+        st.write("**Data Coverage:**")
+        st.write(f"- Total available days: {len(oct_2023)}")
+        st.write(f"- Weekend days (Sat/Sun): {weekend_days}")
+        st.write(f"- Weekday days (Mon-Fri): {weekday_days}")
+        st.write(f"- Data coverage: {len(oct_2023)/31*100:.1f}%")
+        st.write(f"- Missing weekdays: 22 (all Mon-Fri)")
     
     # Add legend and explanation
     col1, col2 = st.columns(2)
@@ -1957,4 +1988,5 @@ else:
     # Navigation hint
     st.markdown("---")
     st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
+
 
