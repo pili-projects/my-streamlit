@@ -1,4 +1,4 @@
-can you update the issues
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -1957,3 +1957,4 @@ else:
     # Navigation hint
     st.markdown("---")
     st.info("💡 **Tip**: Use the sidebar to navigate to other sections of the analysis.")
+
